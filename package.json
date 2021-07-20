@@ -1,14 +1,14 @@
 {
-  "name": "overreacted",
+  "name": "merricx-blog",
   "private": true,
   "engines": {
     "node": "12.x || 13.x || 14.x"
   },
-  "description": "Overreacted",
+  "description": "Merricx personal blog",
   "version": "1.0.0",
-  "author": "Dan Abramov <dan.abramov@me.com>",
+  "author": "merricx",
   "bugs": {
-    "url": "https://github.com/gaearon/overreacted.io/issues"
+    "url": "https://github.com/merricx/personal-blog"
   },
   "dependencies": {
     "gatsby": "^2.0.76",
