@@ -11,7 +11,7 @@
     "url": "https://github.com/merricx/personal-blog"
   },
   "dependencies": {
-    "gatsby": "^2.0.76",
+    "gatsby": "^2.2.0",
     "gatsby-plugin-catch-links": "^2.0.9",
     "gatsby-plugin-disqus": "^1.2.2",
     "gatsby-plugin-ebook": "^1.0.2",
