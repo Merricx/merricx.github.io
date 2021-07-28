@@ -115,6 +115,28 @@ pre[class*='language-'] {
   hyphens: none;
 }
 
+/* Table */
+table th:first-child,
+table td:first-child,
+table th,
+table td {
+  padding: 0.7rem;
+}
+
+td,
+th {
+  border: none;
+}
+
+body.dark table tbody tr:nth-child(odd) {
+  background: #2f3640;
+}
+
+table thead tr,
+table {
+  border-bottom: solid 2px #0984e3;
+}
+
 /* Code blocks */
 pre[class*='language-'] {
   overflow: auto;

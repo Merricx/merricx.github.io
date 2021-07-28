@@ -25,17 +25,7 @@ class BlogIndexTemplate extends React.Component {
         </aside>
         <main>
           {langKey !== 'en' && langKey !== 'ru' && (
-            <Panel>
-              These articles have been{' '}
-              <a
-                href="https://github.com/gaearon/overreacted.io#contributing-translations"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                translated by the community
-              </a>
-              .
-            </Panel>
+            <Panel>Articles that have been translated</Panel>
           )}
 
           {posts.map(({ node }) => {

@@ -75,7 +75,7 @@ class Translations extends React.Component {
               <br />
               {lang !== 'ru' && (
                 <>
-                  <Link to={languageLink('en')}>Read the original</Link>
+                  <Link to={languageLink('en')}>Read in English</Link>
                   {' • '}
                 </>
               )}
@@ -133,9 +133,6 @@ class BlogPostTemplate extends React.Component {
       1,
       enSlug.length - 1
     )}/index${lang === 'en' ? '' : '.' + lang}.md`;
-    const discussUrl = `https://mobile.twitter.com/search?q=${encodeURIComponent(
-      `https://overreacted.io${enSlug}`
-    )}`;
 
     return (
       <Layout location={this.props.location} title={siteTitle}>
@@ -179,7 +176,7 @@ class BlogPostTemplate extends React.Component {
             style={{
               color: 'rgba(210, 214, 220, 0.5)',
               backgroundColor: 'rgba(210, 214, 220, 0.5)',
-              height: 2
+              height: 2,
             }}
           />
           <h3
@@ -187,14 +184,13 @@ class BlogPostTemplate extends React.Component {
               fontFamily: 'Montserrat, sans-serif',
               marginTop: rhythm(0.25),
             }}
-          >
-          </h3>
+          ></h3>
           <Bio />
           <hr
             style={{
               color: 'rgba(210, 214, 220, 0.5)',
               backgroundColor: 'rgba(210, 214, 220, 0.5)',
-              height: 2
+              height: 2,
             }}
           />
           <nav>
@@ -228,16 +224,6 @@ class BlogPostTemplate extends React.Component {
             </ul>
           </nav>
         </aside>
-        <Disqus
-          config={{
-            /* Replace PAGE_URL with your post's canonical URL variable */
-            url: 'https://merricx.github.io/blog/'+this.props.location,
-            /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
-            identifier: this.props.location,
-            /* Replace PAGE_TITLE with the title of the page */
-            title: siteTitle
-          }}
-        />
       </Layout>
     );
   }

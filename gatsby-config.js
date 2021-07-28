@@ -40,6 +40,7 @@ module.exports = {
               inlineCodeMarker: '÷',
             },
           },
+          'gatsby-remark-mathjax',
           'gatsby-remark-copy-linked-files',
           'gatsby-remark-smartypants',
           {
@@ -52,12 +53,12 @@ module.exports = {
       },
     },
     `gatsby-transformer-sharp`,
-    {
+    /*{
       resolve: `gatsby-plugin-disqus`,
       options: {
         shortname: `merricx-gh`
       }
-    },
+    },*/
     `gatsby-plugin-sharp`,
     {
       resolve: `gatsby-plugin-google-analytics`,

@@ -21,8 +21,15 @@ Wordpress2016.overrideThemeStyles = () => ({
   'a.anchor svg[aria-hidden="true"]': {
     stroke: 'var(--textLink)',
   },
-  'p, h3, h4, h5, h6, li': {
-    fontFamily: 'Lato'
+  h1: {
+    fontFamily: 'Montserrat, sans-serif',
+    fontSize: '2rem',
+  },
+  h2: {
+    fontFamily: 'Montserrat, sans-serif',
+  },
+  'p, h3, h4, h5, h6, li, table th, table td': {
+    fontFamily: 'Lato',
   },
   'p code': {
     fontSize: '1rem',

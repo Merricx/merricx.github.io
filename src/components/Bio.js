@@ -23,8 +23,7 @@ class Bio extends React.Component {
           }}
         />
         <p style={{ maxWidth: 350 }}>
-          Blog that written lazily by{' '}
-          <a href="https://github.com/Merricx">merricx</a>.{' '}
+          Blog that written lazily by <a href="/about">merricx</a>.{' '}
           &nbsp;Discuss about security, privacy, and cryptography.
         </p>
       </div>

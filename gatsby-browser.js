@@ -1,6 +1,14 @@
 // gatsby-browser.js
 import React from 'react';
 
+export function onRouteUpdate({ location }) {
+  console.log('new pathname', location.pathname);
+  console.log(MathJax.Hub);
+  if (window.MathJax !== undefined && MathJax.Hub !== undefined) {
+    MathJax.Hub.Queue(['Typeset', MathJax.Hub]);
+  }
+}
+
 // Forked Gatsby default to not remount on switches between
 // translated versions of the same page.
 export function replaceComponentRenderer({ props, loader }) {
