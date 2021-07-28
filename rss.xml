@@ -1,4 +1,414 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dan Abramov's Overreacted Blog RSS Feed]]></title><description><![CDATA[My personal blog]]></description><link>https://merricx.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Tue, 20 Jul 2021 04:11:03 GMT</lastBuildDate><item><title><![CDATA[[NahamConCTF 2021] - Elliptical]]></title><description><![CDATA[Write-up Elliptical - NahamConCTF 2021]]></description><link>https://merricx.github.io/nahamconctf-elliptical/</link><guid isPermaLink="false">https://merricx.github.io/nahamconctf-elliptical/</guid><pubDate>Sun, 14 Mar 2021 20:00:00 GMT</pubDate><content:encoded>&lt;p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dan Abramov's Overreacted Blog RSS Feed]]></title><description><![CDATA[My personal blog]]></description><link>https://merricx.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Wed, 28 Jul 2021 15:59:11 GMT</lastBuildDate><item><title><![CDATA[Don't Roll Your Own Crypto #1]]></title><description><![CDATA[The series of cryptanalyzing encryption scheme from local academic paper or article. This first series will discuss about cryptanalysis of image encryption based on Chaos function.]]></description><link>https://merricx.github.io/dont-roll-your-own-crypto-1/</link><guid isPermaLink="false">https://merricx.github.io/dont-roll-your-own-crypto-1/</guid><pubDate>Wed, 28 Jul 2021 15:42:00 GMT</pubDate><content:encoded>&lt;h1 id=&quot;introduction&quot;&gt;&lt;a href=&quot;#introduction&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;This is a series where I will try to reviewing and cryptanalyzing various cryptosystem schemes that proposed in academic journal, paper, and article from Universities in Indonesia.&lt;/p&gt;
+&lt;p&gt;As written in the title, this article tries to emphasize the sentence “Don’t roll your own Crypto”, where we can’t just design or create our own cryptosystem algorithm. We should always use standarized algorithm for Cryptography. &lt;/p&gt;
+&lt;p&gt;There’s absolutely no intention or whatsoever about humiliating the research that discussed here. In fact, this is how the process of proposing a cryptosystem scheme is carried out, where some party proposes an idea, and the other parties will try to find the weaknesses of that idea, until finally from these weaknesses, it can be developed into a better scheme and so on. &lt;/p&gt;
+&lt;h1 id=&quot;chaos-based-image-encryption&quot;&gt;&lt;a href=&quot;#chaos-based-image-encryption&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Chaos-based Image Encryption&lt;/h1&gt;
+&lt;p&gt;Cryptosystem that will be discussed in this first series is the study from article entitled &lt;strong&gt;“ANALISIS KEAMANAN ALGORITMA ENKRIPSI CITRA DIGITAL MENGGUNAKAN KOMBINASI DUA CHAOS MAP DAN PENERAPAN TEKNIK SELEKTIF”&lt;/strong&gt; written by Rinaldi Munir, that published on Jurnal Ilmiah Teknologi Informasi (JUTI) in 2012 &lt;sup&gt;&lt;a href=&quot;#references&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+&lt;p&gt;The article discussed about image encryption by using two Chaos-based function, which is &lt;strong&gt;Arnold’s Cat Map&lt;/strong&gt; as permutation and &lt;strong&gt;Logistic Map&lt;/strong&gt; as keystream generator.&lt;/p&gt;
+&lt;p&gt;In addition, the article also explained the use of “selective encryption” where the encryption only done on the first 4-bit (Most Significant Byte), while the last 4-bit (Least Significant Byte) of the image (after permutation) never change.&lt;/p&gt;
+&lt;h2 id=&quot;arnolds-cat-map&quot;&gt;&lt;a href=&quot;#arnolds-cat-map&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Arnold’s Cat Map&lt;/h2&gt;
+&lt;p&gt;Arnold’s Cat Map is Chaos Map function that shuffle pixels position (in &lt;code class=&quot;language-text&quot;&gt;(x,y)&lt;/code&gt; coordinate) of the image.&lt;/p&gt;
+&lt;p&gt;The equation that used in the article is as follows.&lt;/p&gt;
+$$
+    \begin{bmatrix}
+    x&apos; \\
+    y&apos; \\
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    1 &amp; p \\
+    q &amp; pq + 1 \\
+    \end{bmatrix}
+    \begin{bmatrix}
+    x \\
+    y \\
+    \end{bmatrix}
+    \mod N
+$$
+&lt;p&gt;Where &lt;code class=&quot;language-text&quot;&gt;(x,y)&lt;/code&gt; is the inital position and &lt;code class=&quot;language-text&quot;&gt;(x&amp;#39;, y&amp;#39;)&lt;/code&gt; is the position after permutation. Meanwhile, &lt;code class=&quot;language-text&quot;&gt;N&lt;/code&gt; is the size of the image and this function will be iterated &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; times.&lt;/p&gt;
+&lt;p&gt;So, the secret variables in this ACM function consists of &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The following is the visualization of the image after ACM has been performed several times. It can be seen that the higher the &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; value, the more random-looking the result will be.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/53cb714c13290142b14c7a0db1ebbb9d/9cab2/acm.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 76.35135135135135%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAPCAIAAABr+ngCAAAACXBIWXMAAAsTAAALEwEAmpwYAAACnUlEQVQoz2WSa1MSYRTH/QjN9B36Hr6uVzXTOPYCFbnswi67ywLLbbkooFgpjVqSCZY6Y1njtcuMTBOIQaKmASY1UynS1JBBGEWy0IFFEzuz++wzzzm/c/Y5/9PAccVyuRwPz4/YBV5H6/SwbdztnvH2RhbvlKs21NtFtDUZCTFLSAyEWIMIYhvrcM5xXAO8sAst+awqsWfAOTHiNlA0Q9KRZT8Pe2+69Liok8EdetLG4CyFxN+8roN9vgCGkBSKMkiT+NL5c2fPKJF2HvYM9jIyYacG62QUNq1CrxBtRTfr4ID/lQylVaRJg0l7WKzl4gXPoOtfZUxo0xJ2eHSESYlux47gYrECzy/4GhubBc1SLUk5zUq1TPL8ySMeHrhqx1suG3ChmUK08lZKdCW2sVaDS6US7HZ2k7Nzi6Oeibnp6YWZqafzc19Sn3h4Ox5dDQeDL3y+Z4/XV5bXwsHs9304B7Ch+qkE/crn3iXeJnd3YtHoXnKXv06lQvGwxHHpdDr1OXVYtVKp5qrdeSMS7jLQ/d0Wl93U77Q4WfXs/XE+YtLrtuuoPrvRZTdes2q7japEPFrXsJVlPyNrZSmpkZSAGGpEAMxRt69r5W1mGoVzWKHbp3VeDS0ZCQmI2VGVxKAQTY3VhmT0lsugEHdoFFY1Bt6Kzpv1OkdCSwCAz6qSd2hwHdb+4O7wkVR9erzdqsYtKjnwLCmNb9ZXjrwMaDGhmZZBYotKxsjbJkdvn4SBNCtRWOEHT8NroSCkdOjIHlbt0FMQ8XBshIfvDd2ARnSzdJdBCaNiotGt4/HkIwqF39nM/rf015VwaOfjh1w28/Mgx7sOcj9A2PeJ7WDAn9pLgutPoVCTqnzCIFkmkwUly/9ZPp/P5XLH4vP2FzUBl+7GsUYWAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;acm&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/53cb714c13290142b14c7a0db1ebbb9d/fcda8/acm.png&quot;
+        srcset=&quot;https://merricx.github.io/static/53cb714c13290142b14c7a0db1ebbb9d/12f09/acm.png 148w,https://merricx.github.io/static/53cb714c13290142b14c7a0db1ebbb9d/e4a3f/acm.png 295w,https://merricx.github.io/static/53cb714c13290142b14c7a0db1ebbb9d/fcda8/acm.png 590w,https://merricx.github.io/static/53cb714c13290142b14c7a0db1ebbb9d/9cab2/acm.png 864w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;To inverse this process, just multiply &lt;code class=&quot;language-text&quot;&gt;(x&amp;#39;, y&amp;#39;)&lt;/code&gt; with the inverse matrix of $\begin{bmatrix} 1 &amp; p\\ q &amp; pq+1\\ \end{bmatrix}$.&lt;/p&gt;
+&lt;h2 id=&quot;logistic-map&quot;&gt;&lt;a href=&quot;#logistic-map&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Logistic Map&lt;/h2&gt;
+&lt;p&gt;Logistic Map is Chaos Map function from simple non-linear equation below.&lt;/p&gt;
+$$
+x_{i+1} = r x_i \left(1 - x_i\right)
+$$
+&lt;p&gt;Where defined constant &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; as real number in the interval of 0 to 4 and &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; as random initial value in the interval of 0 to 1. These variables are kept secret.&lt;/p&gt;
+&lt;p&gt;To generate keystream with Logistic Map, calculate the above equation which will be resulting &lt;code class=&quot;language-text&quot;&gt;x1, x2, x3, ...&lt;/code&gt; until the required length of keystream is met. Each value of &lt;code class=&quot;language-text&quot;&gt;x1, x2, x3, ...&lt;/code&gt; then will be represented as 4-bit key which is determined from the numbers after decimal point.&lt;/p&gt;
+&lt;p&gt;For example, given a sequence of Logistic Map that is &lt;code class=&quot;language-text&quot;&gt;0.5, 0.875, 0.3828125, 0.8269348, ...&lt;/code&gt;, then we take the number after decimal point (with pre-defined precision, 4 in this case) so they become &lt;code class=&quot;language-text&quot;&gt;5, 875, 3828, 8269, ...&lt;/code&gt;. Change each of the number to binary and take the last 4-bit (LSB) resulting keystream as follows: &lt;code class=&quot;language-text&quot;&gt;0101, 1011, 0100, 1101, ...&lt;/code&gt;&lt;/p&gt;
+&lt;h2 id=&quot;encryption&quot;&gt;&lt;a href=&quot;#encryption&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Encryption&lt;/h2&gt;
+&lt;p&gt;The encryption stages are as follows:&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/c1b63/encrypt.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 58.10810810810811%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAIAAADtbgqsAAAACXBIWXMAAAsTAAALEwEAmpwYAAABhklEQVQoz5WQ60vCUBjG/Qv7BwwiiCjWhYjaUhdkISSBqIuiErGrWwUGfqkECQpJIQLJb6ngdLqt4aZzXrfemi3z8qHnwznbed/feZ/nmFRV1TTtLR6+DTrvQuTrU1jttLQe6Q3xxwfq+Oj6zH8fDhklk167udj32uccFtTn3gZYqdc5jq18q9lsdjqdc9/e8rQZRSZdW7Z+OOAPIlOziHkMmRiXZVmSpGKxyLKsIAgVSSoUGDJwaJ2fwpdmdp32AThwtYCsuhzrl6c+7a+61siTTWxxZ2PtwO38hfVNrtVYlmNLJZhpAL3wB89nMxlRLKfT7/2woUajkc/nc7kcGBaht1yG2BAkR9O8IMBFiqIMgfUJ7XYbeIZhAIBveC1YoSCLosTz8MtxnNFsGpoQzAPTe5JNpV4ikVgsFo1GR9qGu4UfVatVcKGfkxS1gmJWi4UgiJEwDISxEAyiwtpqtfTJFEVhKGbDbR6PZyQ8qC5MfsE4jhOE998wnaef4/FEIpFMJo3SJ8nEheLM5TteAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;encrypt&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/fcda8/encrypt.png&quot;
+        srcset=&quot;https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/12f09/encrypt.png 148w,https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/e4a3f/encrypt.png 295w,https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/fcda8/encrypt.png 590w,https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/efc66/encrypt.png 885w,https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/c83ae/encrypt.png 1180w,https://merricx.github.io/static/0542cfc5a2b3327fcba64f6f6a9bd4c2/c1b63/encrypt.png 1200w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Define Plain-image &lt;code class=&quot;language-text&quot;&gt;P&lt;/code&gt;, secret key &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Permutate image &lt;code class=&quot;language-text&quot;&gt;P&lt;/code&gt; using Arnold’s Cat Map with &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; as parameters, resulting image &lt;code class=&quot;language-text&quot;&gt;Px&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Generate keystream &lt;code class=&quot;language-text&quot;&gt;K&lt;/code&gt; using Logistic Map with constant &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; and inital value &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Encrypt 4-bit MSB each pixel of image &lt;code class=&quot;language-text&quot;&gt;Px&lt;/code&gt; with keystream &lt;code class=&quot;language-text&quot;&gt;K&lt;/code&gt; using XOR operation, resulting 4-bit &lt;code class=&quot;language-text&quot;&gt;Cx&lt;/code&gt; on each pixel.&lt;/li&gt;
+&lt;li&gt;Combine 4-bit &lt;code class=&quot;language-text&quot;&gt;Cx&lt;/code&gt; with 4-bit LSB of image &lt;code class=&quot;language-text&quot;&gt;Px&lt;/code&gt; on each pixel, resulting Cipher-image &lt;code class=&quot;language-text&quot;&gt;C&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Implementation of this algorithm can be accessed in &lt;a href=&quot;https://github.com/Merricx/chaos-image-encryption/blob/main/encryption.py&quot; target=&quot;_blank&quot;&gt;this link&lt;/a&gt;.&lt;/p&gt;
+&lt;h1 id=&quot;cryptanalysis&quot;&gt;&lt;a href=&quot;#cryptanalysis&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Cryptanalysis&lt;/h1&gt;
+&lt;p&gt;Let’s just try to do the cryptanalysis against this encryption scheme.&lt;/p&gt;
+&lt;p&gt;While conducting cryptanalysis, will be assumed some implementation scenario because the article didn’t define a specification of how the implementation should be done.&lt;/p&gt;
+&lt;p&gt;Cryptanalysis model which we will use is &lt;strong&gt;Chosen-Plain image Attack&lt;/strong&gt;, where we can encrypt any image as much as we want and receive the coresponding cipher image.&lt;/p&gt;
+&lt;h2 id=&quot;static-secret-key&quot;&gt;&lt;a href=&quot;#static-secret-key&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Static Secret Key&lt;/h2&gt;
+&lt;p&gt;Let’s assume the implementation where secret key that consist of &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; are static and does not change in different encryption request.&lt;/p&gt;
+&lt;h3 id=&quot;recovery-of-keystream&quot;&gt;&lt;a href=&quot;#recovery-of-keystream&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Recovery of Keystream&lt;/h3&gt;
+&lt;p&gt;Because the value of &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; always same, the result keystream generated from Logistic Map will also be same.&lt;/p&gt;
+&lt;p&gt;That means, we can determine keystream &lt;code class=&quot;language-text&quot;&gt;K&lt;/code&gt; easily as long as we know cipher image &lt;code class=&quot;language-text&quot;&gt;C&lt;/code&gt; and the coresponding plain image that has been permutated by ACM (&lt;code class=&quot;language-text&quot;&gt;Px&lt;/code&gt;) because:&lt;/p&gt;
+$$
+C = Px \oplus K \\
+K = C \oplus Px
+$$
+&lt;p&gt;But, here we still don’t know the value of &lt;code class=&quot;language-text&quot;&gt;Px&lt;/code&gt; (only 4-bit LSB that we know) because we don’t know value of &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; of ACM.&lt;/p&gt;
+&lt;p&gt;Well, because this is Chosen-Plain image Attack and we can encrypt any image, we can just use plain image where all of the pixels are same such as full-black image or full-white image.&lt;/p&gt;
+&lt;p&gt;Because all of the pixels are same, the permutation from ACM will resulting same image too, so that we know &lt;code class=&quot;language-text&quot;&gt;Px&lt;/code&gt; and we can just find the keystream with XOR ¯\_(ツ)_/¯&lt;/p&gt;
+&lt;p&gt;After we got the keystream, let’s find &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;.&lt;/p&gt;
+&lt;h3 id=&quot;recovery-of-m&quot;&gt;&lt;a href=&quot;#recovery-of-m&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Recovery of &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;It should be noted that ACM process is actually quite costly in terms of hardware, where in one ACM iteration (&lt;code class=&quot;language-text&quot;&gt;m = 1&lt;/code&gt;) takes quite long time to finish, so the time difference in the value of &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;m+1&lt;/code&gt; is quite noticable.&lt;/p&gt;
+&lt;p&gt;This is actually dangerous because we can find out the value of &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; from &lt;strong&gt;Timing Attack&lt;/strong&gt;. The higher the &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; value is, the longer the ACM operation will take.&lt;/p&gt;
+&lt;p&gt;The following is table of test results for the time required for the ACM process using &lt;code class=&quot;language-text&quot;&gt;m = 1&lt;/code&gt; to &lt;code class=&quot;language-text&quot;&gt;m = 5&lt;/code&gt; on a 1024x1024 image using my own laptop.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;m&lt;/th&gt;
+&lt;th&gt;Time (s)&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;7.1236&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;13.8878&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;21.7516&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;27.8001&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;35.2292&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;It can be seen on the table that time required for the ACM is relatively consistent on the multiple of 7 seconds. From this time result, we can find &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; only from the time it takes to encrypt an image.&lt;/p&gt;
+&lt;p&gt;Actually from the start, keeping &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; secret is irrelevant, because after all, it is impossible that the value &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; would be too high, since it can bring performance issue if the value of &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; is too high. So, we can also just brute-force &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;.&lt;/p&gt;
+&lt;h3 id=&quot;recovery-of-p-and-q&quot;&gt;&lt;a href=&quot;#recovery-of-p-and-q&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Recovery of &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;After getting the value of &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;, finding &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt; is trivial.&lt;/p&gt;
+&lt;p&gt;The idea is that we will create plain image where all of the pixels contain value of black color (0), except for one pixel that will be white colored (255) or value other than 0.&lt;/p&gt;
+&lt;p&gt;For example, we specify the white pixel on &lt;code class=&quot;language-text&quot;&gt;(1, 0)&lt;/code&gt;, then plain image with 4x4 size can be represented as the following matrix.&lt;/p&gt;
+$$
+\begin{pmatrix}
+0 &amp; 255 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+\end{pmatrix}
+$$
+&lt;p&gt;Enter the plain image into encryption oracle, get the corresponding cipher image, then decrypt it using keystream that we got before, so we have permutated plain-image.&lt;/p&gt;
+&lt;p&gt;Lets assume the permutated plain image is as follows.&lt;/p&gt;
+$$
+\begin{pmatrix}
+0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 255 &amp; 0 \\
+\end{pmatrix}
+$$
+&lt;p&gt;Then, we can conclude that our previous pixel on &lt;code class=&quot;language-text&quot;&gt;(1, 0)&lt;/code&gt; move to &lt;code class=&quot;language-text&quot;&gt;(2, 3)&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Lets assume &lt;code class=&quot;language-text&quot;&gt;m = 3&lt;/code&gt;, then the equation of ACM will be as follows.&lt;/p&gt;
+$$
+    \begin{bmatrix}
+    2 \\
+    3 \\
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    1 &amp; p \\
+    q &amp; pq + 1 \\
+    \end{bmatrix}^3
+    \begin{bmatrix}
+    1 \\
+    0 \\
+    \end{bmatrix}
+    \mod N
+$$
+&lt;p&gt;It can be rewritten to:&lt;/p&gt;
+$$
+\begin{equation}
+\begin{aligned}
+2 &amp;\equiv \left( \left( p \cdot q + 1 \right) \cdot p + p \right) \cdot q + p \cdot q + 1 \pmod{N} \\ 
+3 &amp;\equiv \left( \left( p \cdot q + 1 \right)^2 + p \cdot q \right) \cdot q + \left( p \cdot q + 1 \right) \cdot q + q \pmod{N}
+\end{aligned}
+\end{equation}
+$$
+&lt;p&gt;Where &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt; can be found by solving linear equations in two variables (with modulus &lt;code class=&quot;language-text&quot;&gt;N&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;Finally, with the knowledge of keystream &lt;code class=&quot;language-text&quot;&gt;K&lt;/code&gt;, secret value &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;, we can decrypt any image that was encrypted under this secret key :).&lt;/p&gt;
+&lt;h3 id=&quot;proof-of-concept&quot;&gt;&lt;a href=&quot;#proof-of-concept&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Proof of Concept&lt;/h3&gt;
+&lt;p&gt;Lets prove it by implementing it into Python.&lt;/p&gt;
+&lt;p&gt;First, we define &lt;code class=&quot;language-text&quot;&gt;encryption_oracle()&lt;/code&gt; function which will be acting as a “server” where we can encrypt any image to that “server” and receive the corresponding cipher image.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; os
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; numpy &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; np
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; encryption
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; PIL &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; Image
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; Crypto&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;Util&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;strxor &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; strxor
+
+&lt;span class=&quot;token comment&quot;&gt;# Secret&lt;/span&gt;
+p &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;randint&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;250&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+q &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;randint&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;250&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+m &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;3&lt;/span&gt;
+init &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;random&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+r &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;+&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;random&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;encryption_oracle&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;plain_image&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; encryption&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;encrypt&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;plain_image&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; p&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; q&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; m&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; init&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; r&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then, write function to find keystream from chosen-plain image attack.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;recover_keystream&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;size&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;# Generate full-black image&lt;/span&gt;
+    plain_image &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; Image&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;new&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;RGB&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;size&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; size&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;# Send image to encryption oracle&lt;/span&gt;
+    cipher_image &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; encryption_oracle&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;plain_image&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;# Convert plain_image and cipher_image to bytes&lt;/span&gt;
+    plain_image_bytes &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;np&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;array&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;plain_image&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;flatten&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;tolist&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    cipher_image_bytes &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;bytes&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;np&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;array&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;cipher_image&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;flatten&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;tolist&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;# Recover 8-bit keystream&lt;/span&gt;
+    k &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;strxor&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;plain_image_bytes&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; cipher_image_bytes&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;# Get 4-bit MSB keystream&lt;/span&gt;
+    keystream &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; i &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;size&lt;span class=&quot;token operator&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        bit_len &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;k&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;i&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;bit_length&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; bit_len &lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+            msb &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; k&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;i&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;bit_len&lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+            msb &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;
+        
+        keystream&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;append&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;msb&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; keystream&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then, write function to find &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; through Timing Attack.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;recover_m&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token comment&quot;&gt;# avg. second of one encryption execution time (depends on the machine)&lt;/span&gt;
+    one_exec_time &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;10&lt;/span&gt; 
+
+    start_time &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; time&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;time&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    payload &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; Image&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;new&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;RGB&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1024&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1024&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    encryption_oracle&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;payload&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    end_time &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; time&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;time&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    elapsed_time &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; end_time &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; start_time
+    m &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;elapsed_time &lt;span class=&quot;token operator&quot;&gt;//&lt;/span&gt; one_exec_time&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;# Result could be faster or slower&lt;/span&gt;
+    possible_m &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;m&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; m&lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; m&lt;span class=&quot;token operator&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; possible_m&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Lastly, to find &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;, we will use &lt;strong&gt;Sagemath&lt;/strong&gt; with the &lt;code class=&quot;language-text&quot;&gt;solve_mod()&lt;/code&gt; function to solving linear equations in two variables as we discussed earlier.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token comment&quot;&gt;#!/usr/bin/env sage&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;recover_pq&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;m&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; x0&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; y0&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; x1&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; y1&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; N&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+
+    var&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&apos;p,q&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    xy &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; matrix&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;x0&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;y0&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    A &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; matrix&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;p&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;q&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; p&lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;q &lt;span class=&quot;token operator&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    pos_result &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; solve_mod&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;A&lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;m &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; xy&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; x1&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;A&lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt;m &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; xy&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; y1
+        &lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; N&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; pos_result
+
+&lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; __name__ &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;__main__&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+
+    m &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;7&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# ACM iteration&lt;/span&gt;
+    x0 &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;
+    y0 &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;
+    x1 &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;489&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# x-coordinate after permutation&lt;/span&gt;
+    y2 &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;396&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# y-coordinate after permutation&lt;/span&gt;
+    N &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;512&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# image size&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;Possible p,q: &quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;recover_pq&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;m&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; x0&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; y0&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; x1&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; y2&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; N&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Full implementation of this attack can be found in &lt;a href=&quot;https://github.com/Merricx/chaos-image-encryption&quot; target=&quot;_blank&quot; rel=&quot;nofollow noopener noreferrer&quot;&gt;this link&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&quot;static-secret-key-with-dynamic-x0&quot;&gt;&lt;a href=&quot;#static-secret-key-with-dynamic-x0&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Static Secret Key with Dynamic &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;The next implementation scenario is assumed that the variable &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt;,&lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt;,&lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt;,&lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; is static but the variable &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; is dynamic, where this value will change randomly in different encryption request.&lt;/p&gt;
+&lt;p&gt;This is the most ideal scenario that can possibly implemented in this scheme, because static keystream is no longer happened.&lt;/p&gt;
+&lt;p&gt;However, the problem is how this &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; can be associated in each of different images. One possible approach is to treat &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; as Initialization Vector (IV) as we seen in block cipher. But, this value must still be encrypted again with certain method and listed in every image that has been encrypted using that value.&lt;/p&gt;
+&lt;p&gt;Let’s ignore the technical side of how &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; implemented. Our assumption in this scenario is that for every request to the encryption oracle, the value of &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; will be arbitrary and random.&lt;/p&gt;
+&lt;p&gt;Because repeated keystream can no longer be exploited, it will be difficult for us to finding the keystream from chosen-plain image attack, since this encryption basically becomes &lt;strong&gt;One-Time Pad&lt;/strong&gt;. &lt;/p&gt;
+&lt;h3 id=&quot;recover-acm-secret&quot;&gt;&lt;a href=&quot;#recover-acm-secret&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Recover ACM secret&lt;/h3&gt;
+&lt;p&gt;Then how can we find &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt; without knowing the &lt;em&gt;keystream&lt;/em&gt; that currently used? &lt;/p&gt;
+&lt;p&gt;This is where the security flaw from the use of &lt;strong&gt;“selective encryption”&lt;/strong&gt; occurs, where cipher image leaks information from the LSB of the plain image. &lt;/p&gt;
+&lt;p&gt;Lets assume we use plain image that represented as follows:&lt;/p&gt;
+$$
+\begin{pmatrix}
+0 &amp; 255 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 0 \\
+\end{pmatrix}
+$$
+&lt;p&gt;Enter the plain image into encryption oracle. Then, suppose we get cipher image as follows.&lt;/p&gt;
+$$
+\begin{pmatrix}
+32 &amp; 96 &amp; 176 &amp; 32 \\
+112 &amp; 240 &amp; 112 &amp; 144 \\
+32 &amp; 95 &amp; 192 &amp; 80 \\
+176 &amp; 208 &amp; 48 &amp; 160 \\
+\end{pmatrix}
+$$
+&lt;p&gt;Lets change each of the pixel to binary representation and boom!! &lt;em&gt;LSB oracle goes brrrr!&lt;/em&gt;&lt;/p&gt;
+$$
+\begin{pmatrix}
+00100000 &amp; 01100000 &amp; 10110000 &amp; 00100000 \\
+01110000 &amp; 11110000 &amp; 01110000 &amp; 10010000 \\
+00100000 &amp; 01011111 &amp; 11000000 &amp; 01010000 \\
+10110000 &amp; 11010000 &amp; 00110000 &amp; 10100000 \\
+\end{pmatrix}
+$$
+&lt;p&gt;Because of this selective encryption scheme, we still know the position of our white pixel after the permutation because 4-bit LSB of the plain image never changes (just looks 4-bit LSB that doesn’t have the value &lt;code class=&quot;language-text&quot;&gt;0000&lt;/code&gt;). &lt;/p&gt;
+&lt;p&gt;Just continue using the same method as the previous scenario by solving the linear equations of two variables to find &lt;code class=&quot;language-text&quot;&gt;p&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;q&lt;/code&gt; (value of &lt;code class=&quot;language-text&quot;&gt;m&lt;/code&gt; can still be found through Timing Attack). &lt;/p&gt;
+&lt;p&gt;Next, how can we find dynamic &lt;em&gt;keystream&lt;/em&gt; value? Meanwhile One-Time Pad is an “unbreakable cipher”. &lt;/p&gt;
+&lt;h3 id=&quot;weak-logistic-map&quot;&gt;&lt;a href=&quot;#weak-logistic-map&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Weak Logistic Map&lt;/h3&gt;
+&lt;p&gt;The only thing we can try to exploit is from the implementation of Logistic Map. &lt;/p&gt;
+&lt;p&gt;Analysis of how Logistic Map works is beautifully explained in &lt;u&gt;geoffboeing.com&lt;/u&gt; &lt;sup&gt;&lt;a href=&quot;#references&quot;&gt;[2]&lt;/a&gt;&lt;/sup&gt;. Interestingly, there are several things that can make the generation results of Logistic Map repetitive and periodic if the constant &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; and the initial value &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt; are not picked carefully. &lt;/p&gt;
+&lt;p&gt;Let’s try to do a little experiment using the implemented Logistic Map based on this article in generating keystream. &lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; random
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; encryption
+
+&lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; i &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1000&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    init &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;random&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    r &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;randint&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;+&lt;/span&gt; random&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;random&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&apos;x0:&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; init&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&apos;r :&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; r&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&apos;keystream&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; encryption&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;logistic_map&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;init&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; r&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running the script and take some interesting result.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;x0: 0.7244972999777215
+r : 2.2929146462509595
+keystream: [7, 2, 15, 3, 5, 14, 0, 9, 1, 15, 7, 10, 0, 11, 10, 14, 6, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+
+x0: 0.18893176526337663
+r : 1.6653541535673568
+keystream: [4, 9, 3, 1, 9, 7, 10, 8, 15, 15, 11, 7, 2, 15, 6, 12, 0, 8, 5, 15, 8, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+
+x0: 0.8927173285063715
+r : 3.5157732279084075
+keystream: [5, 13, 12, 12, 14, 5, 4, 0, 8, 0, 5, 8, 10, 0, 2, 11, 9, 0, 9, 7, 15, 2, 5, 14, 1, 2, 10, 15, 14, 11, 9, 15, 0, 9, 15, 7, 7, 13, 15, 1, 3, 11, 0, 2, 2, 1, 0, 15, 13, 2, 6, 15, 4, 8, 4, 12, 0, 2, 12, 1, 5, 6, 6, 12, 8, 0, 10, 5, 8, 15, 4, 10, 0, 4, 1, 4, 9, 1, 2, 0, 6, 8, 2, 1, 7, 5, 2, 1, 6, 6, 2, 1, 7, 6, 2, 1, 6, 6, 2, 1, 7, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1, 6, 6, 2, 1]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;As we can see from the generated keystream above, the Logistic Map produces sequence that is truly repetitive both statically and periodically.&lt;/p&gt;
+&lt;p&gt;Based from the experiment, we can note some value in the constant &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; that will potentially cause repetitive keystream.&lt;/p&gt;
+&lt;p&gt;The list of constants &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; that potentially generate a static &lt;em&gt;keystream&lt;/em&gt; is: &lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;1.1 ~ 2.4
+2.6 ~ 2.8
+3.3&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Whereas, The list of constants &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; that potentially generate periodic &lt;em&gt;keystream&lt;/em&gt; is: &lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;2.5
+2.9
+3.1
+3.2
+3.4
+3.5&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;From the two phenomena above, it can be concluded that the key space in choosing the constant &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; is increasingly limited to avoid repeated keystream, both statically and periodically. &lt;/p&gt;
+&lt;p&gt;So, the constant &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; that might be chosen to avoid repetition is to choose one of the following values. &lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;1.0~
+3.0~
+3.6~
+3.7~
+3.8~
+3.9~&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;For the values of 0.9 and below are ignored because after several generation process, the sequence will tend to 0 values, so it can’t generate large keystream.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So, to get dynamic keystream from the Logistic Map, first we check whether there are repetition in the pixels of the cipher image (especially at the bottom pixels). For static repetition, we simply brute-force 1 out of 16 possible values, while for periodic repetition, we simply brute-force 2 to 4 out of 16 possible values. &lt;/p&gt;
+&lt;p&gt;If there is no sign of repetition of the keystream bit, we can brute-force to find the value of the constant &lt;code class=&quot;language-text&quot;&gt;r&lt;/code&gt; from a list of possible values that will not cause repetition previously along with the initial value of &lt;code class=&quot;language-text&quot;&gt;x0&lt;/code&gt;. &lt;/p&gt;
+&lt;h3 id=&quot;proof-of-concept-1&quot;&gt;&lt;a href=&quot;#proof-of-concept-1&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Proof of Concept&lt;/h3&gt;
+&lt;p&gt;Implementation of this attack can be accessed in &lt;a href=&quot;https://github.com/Merricx/chaos-image-encryption&quot; target=&quot;_blank&quot; rel=&quot;nofollow noopener noreferrer&quot;&gt;this link&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&quot;conclusion&quot;&gt;&lt;a href=&quot;#conclusion&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;From the two implementation scenarios that discussed above, it can be concluded that this Chaos-based Image Encryption is truly vulnerable to Chosen-Plain image Attack (Known-Plain image Attack can also viable in some conditions). &lt;/p&gt;
+&lt;p&gt;Both the Arnold’s Cat Map, Logistic Map, as well as the use of the selective encryption are vulnerable that can make &lt;em&gt;attacker&lt;/em&gt; decrypt any encrypted image without access to the secret key that is currently used. Lastly, further development needs to be studied to produce even better algorithm, especially in terms of security. &lt;/p&gt;
+&lt;h1 id=&quot;references&quot;&gt;&lt;a href=&quot;#references&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;References&lt;/h1&gt;
+&lt;ol&gt;
+&lt;li&gt;Munir, Rinaldi. (2012). ANALISIS KEAMANAN ALGORITMA ENKRIPSI CITRA DIGITAL MENGGUNAKAN KOMBINASI DUA CHAOS MAP DAN PENERAPAN TEKNIK SELEKTIF. JUTI: Jurnal Ilmiah Teknologi Informasi. 10. 89. 10.12962/j24068535.v10i2.a310.  &lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://geoffboeing.com/2015/03/chaos-theory-logistic-map/&quot; target=&quot;_blank&quot; rel=&quot;nofollow noopener noreferrer&quot;&gt;https://geoffboeing.com/2015/03/chaos-theory-logistic-map/&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+                &lt;div style=&quot;margin-top=55px; font-style: italic;&quot;&gt;(This is an article posted to my blog at overreacted.io. You can read it online by &lt;a href=&quot;https://merricx.github.io/dont-roll-your-own-crypto-1/&quot;&gt;clicking here&lt;/a&gt;.)&lt;/div&gt;
+              </content:encoded></item><item><title><![CDATA[[NahamConCTF 2021] - Elliptical]]></title><description><![CDATA[Write-up Elliptical - NahamConCTF 2021]]></description><link>https://merricx.github.io/nahamconctf-elliptical/</link><guid isPermaLink="false">https://merricx.github.io/nahamconctf-elliptical/</guid><pubDate>Sun, 14 Mar 2021 20:00:00 GMT</pubDate><content:encoded>&lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
     href=&quot;https://merricx.github.io/static/a01a38a0dcad4599e0852243d8d126fc/39a20/challs.png&quot;
