@@ -87,8 +87,8 @@ module.exports = {
               return allMarkdownRemark.edges.map(edge => {
                 const siteUrl = site.siteMetadata.siteUrl;
                 const postText = `
-                <div style="margin-top=55px; font-style: italic;">(This is an article posted to my blog at overreacted.io. You can read it online by <a href="${siteUrl +
-                  edge.node.fields.slug}">clicking here</a>.)</div>
+                <div style="margin-top=55px; font-style: italic;">You can read it online by <a href="${siteUrl +
+                  edge.node.fields.slug}">clicking here</a></div>
               `;
 
                 let html = edge.node.html;
@@ -133,12 +133,12 @@ module.exports = {
               }
             `,
             output: '/rss.xml',
-            title: "Dan Abramov's Overreacted Blog RSS Feed",
+            title: 'Merricx personal blog RSS Feed',
           },
         ],
       },
     },
-    {
+    /*{
       resolve: `gatsby-plugin-ebook`,
       options: {
         filename: 'overreacted-ebook.epub',
@@ -168,15 +168,15 @@ module.exports = {
             }
           }`,
       },
-    },
+    },*/
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `Overreacted`,
-        short_name: `Overreacted`,
+        name: `Merricx Blog`,
+        short_name: `Merricx`,
         start_url: `/`,
         background_color: `#ffffff`,
-        theme_color: `#ffa7c4`,
+        theme_color: `#0984e3`,
         display: `minimal-ui`,
         icon: `src/assets/icon.png`,
         theme_color_in_head: false,

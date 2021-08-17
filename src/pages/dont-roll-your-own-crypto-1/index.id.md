@@ -462,4 +462,4 @@ Baik fungsi *Arnold's Cat Map*, *Logistic Map*, maupun penggunaan enkripsi selek
 # References
 
 1. Munir, Rinaldi. (2012). ANALISIS KEAMANAN ALGORITMA ENKRIPSI CITRA DIGITAL MENGGUNAKAN KOMBINASI DUA CHAOS MAP DAN PENERAPAN TEKNIK SELEKTIF. JUTI: Jurnal Ilmiah Teknologi Informasi. 10. 89. 10.12962/j24068535.v10i2.a310.  
-2. https://geoffboeing.com/2015/03/chaos-theory-logistic-map/
+2. Boeing, G. (2016). Visual Analysis of Nonlinear Dynamical Systems: Chaos, Fractals, Self-Similarity and the Limits of Prediction. Systems, 4 (4), 37. doi:10.3390/systems4040037
