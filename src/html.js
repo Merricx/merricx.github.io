@@ -65,11 +65,11 @@ export default class HTML extends React.Component {
             `,
             }}
           />
-          <script dangerouslySetInnerHTML={{__html: MathJaxConfig}} />
           <script
-            defer
-            src="https://cdn.bootcss.com/mathjax/2.7.4/latest.js?config=TeX-AMS_SVG"
-          />
+            async
+            src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS_SVG"
+          ></script>
+          <script dangerouslySetInnerHTML={{ __html: MathJaxConfig }} />
           {this.props.preBodyComponents}
           <div
             key={`body`}
