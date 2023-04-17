@@ -2,7 +2,7 @@
   "name": "merricx-blog",
   "private": true,
   "engines": {
-    "node": "12.x || 13.x || 14.x || 16.x"
+    "node": "12.x || 13.x || 14.x"
   },
   "description": "Merricx personal blog",
   "version": "1.0.0",

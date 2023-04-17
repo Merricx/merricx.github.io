@@ -135,13 +135,24 @@ And that's it, we basically already bypass all linear operation even without the
 
 > Imagine AES without `SubBytes` operation, then if you know `c1`, `c2`, and `p1`, it is become trivial to recover `p2`, just like what happen in simple XOR cipher.
 
-This way, we only need to focus on one operation that is non-linear which is `SubBytes`.
+This way, we only need to focus on one operation that is non-linear which is `SubBytes`. 
+
+Consider $(x, y)$ for every possible byte values. Then, let $\alpha = x \oplus y$ and $\beta = SB(x) \oplus SB(y)$ where $SB$ denotes `SubBytes` operation. We are trying to analyze how many times $\alpha$ and $\beta$ hold.
+
+For example, let $\alpha = 8$ and $\beta = 125$. Over all 256 possible bytes, there are two possible byte pair $(x, y)$ that satisfy the condition which are $(1, 9)$ and $(9, 1)$. 
 
 $$
-x \oplus y \stackrel{?}{=} SB(x) \oplus SB(y)
+\begin{equation}
+\begin{aligned}
+8 & = 1 \oplus 9 = 9 \oplus 1 \\
+125 & = SB(1) \oplus SB(9) = SB(9) \oplus SB(1)
+\end{aligned}
+\end{equation}
 $$
 
-And that is what Differential Cryptanalysis is all about, we find the probability of input differential that will resulting to the specific output differential through S-BOX.
+So, the probability of ($\alpha$, $\beta$) being $(1, 8)$ are 2/256. 
+
+And that is what Differential Cryptanalysis is all about, we find the probability of input differential ($\alpha$) that will resulting to the specific output differential ($\beta$) through S-BOX.
 
 ## Differential in AES S-box
 
@@ -262,7 +273,7 @@ Can we extend our previous attack to make it works against 2 round AES?
 
 Consider $ (p_1, c_1) $ and $ (p_2, c_2) $ are plaintext-ciphertext pairs of 2-round AES and $(\alpha, \beta)$ are input-output difference pairs of $(p_1, p_2)$ and $(c_1, c_2)$ respectively.
 
-If we illustrate this scenario into 2-round AES, we can bypass first `AddRoundKey` and `ShiftRows` by swapping operation order with `SubBytes`. Then, in the last round, we can bypass `ShiftRows`, `MixColumns`, and `AddRoundKey`. So, the view become $\alpha \Rightarrow SB \Rightarrow MC \Rightarrow ARK \Rightarrow SB \Rightarrow \beta$.
+If we illustrate this scenario into 2-round AES, we can bypass first `AddRoundKey` and `ShiftRows` by swapping operation order with `SubBytes`. Then, in the last round, we can bypass `ShiftRows`, `MixColumns`, and `AddRoundKey`. So, the view become $\alpha \circ SB \circ MC \circ ARK \circ SB \circ \beta$.
 
 Unfortunately, there are already too many operation between `SubBytes` that will significantly mess our differential distribution. Moreover, `MixColumns` will also prevent us to work on one-on-one byte relation, since this operation works on 4-bytes at once. This is already too much and too complex. Thus, we need different strategy that much more simple. 
 
@@ -270,7 +281,7 @@ The key point here is that we can only "bypass" `SubBytes` with differential **o
 
 ### Half Last Round
 
-To simplify our understanding of the attack, lets first assume that last round does not make use of `MixColumns` (usually called half round). So, in the round 2, the operation flow is only $SB \Rightarrow SR \Rightarrow ARK$.
+To simplify our understanding of the attack, lets first assume that last round does not make use of `MixColumns` (usually called half round). So, in the round 2, the operation flow is only $SB \circ SR \circ ARK$.
 
 Let $\alpha$ be differential of plaintext $(p_1, p_2)$ where only the first column has **active** byte, which is byte with non-zero differential. Any other value should be zero differential or **inactive** byte. Since we need this spesific plaintext value, so this attack only applicable in chosen-plaintext scenario.
 
@@ -280,7 +291,7 @@ Then, send $(p_1, p_2)$ to the encryption oracle which will give us correspondin
 
 If we remember our previous differential observation, there are 129/256 probability that differential input/output is impossible. Instead of using possible pair of differential, we will use the opposite which is the impossible pair. We can use this property as distinguisher whether our state is in correct state or not.
 
-So, the main idea here is to generate all *impossible* state at the start of round 2 just before second `SubBytes` using $\alpha$. First, we want to bypass `SubBytes` using S-Box DDT like our previous attack on 1-round. But here, instead of finding possible S-Box output differential, we want to find impossible S-Box output differential. This will result in 129 impossible byte for each $\alpha$ denoted by $\mathbf{S} = (S_1, \ldots, S_{129})$. Then, for $S_i$ we apply $SR$, $MC$ and store this state to the list of impossible state.
+So, the main idea here is to generate all *impossible* state at the start of round 2 just before second `SubBytes` using $\alpha$. First, we want to bypass `SubBytes` using S-Box DDT like our previous attack on 1-round. But here, instead of finding possible S-Box output differential, we want to find impossible S-Box output differential. This will result in 129 impossible byte for each $\alpha$ denoted by $\mathbf{S} = (S_1, \ldots, S_{129})$. Then, for each $S_i$ we apply $SR$, $MC$ and store this state to the list of impossible state.
 
 ![](round2-2.png)
 
@@ -330,7 +341,7 @@ MC^{-1}(ARK(c)) = MC^{-1}(c) \oplus MC^{-1}(RoundKey)
 \end{equation}
 $$
 
-So, we can apply $MC^{-1}$ on our $c$ before $ARK$ as long we also apply $MC^{-1}$ to the $RK_2$. But, we don't really care about updating $RK_2$ right now. We just need to apply $MC$ later when we got all bytes of the possible keys.
+So, we can apply $MC^{-1}$ on our $c$ before $ARK$ as long as we also apply $MC^{-1}$ to the $RK_2$. But, we don't really care about updating $RK_2$ right now. We just need to apply $MC$ later when we got all bytes of the possible keys.
 
 ![](round2-5.png)
 
@@ -360,7 +371,7 @@ We can determine whether $GK_0$ is the correct guess or not by looking at the nu
 
 After impossible keys of all byte position in $RK_3$ discarded, we enumerate the remaining key, apply $MC$ and perform inverse key schedule to reverse $RK_3$ to $RK_0$ and check if the key is correct via trial encryption/decryption.
 
-Although the chosen-plaintext required in this attack is the same with the previous attack (~10 $\alpha$), the time complexity in this attack is at least $2^8$ times higher than the previous attack since we guess 2 bytes at a time. Moreover, for each guess of $GK_0$, we need to regenerate the impossible state again. But this attack is still quite fast and running this on my laptop only take about 5-10 minutes on average.
+Although the chosen-plaintext required in this attack is the same with the previous attack (~10 $\alpha$), the time complexity in this attack is at least $2^8$ times higher than the previous attack since we guess 2 bytes at a time. Moreover, for each guess of $GK_0$, we need to regenerate the impossible state again. But this attack is still quite fast and running this on my laptop only take less than 5 minutes on average.
 
 # Conclusion
 
