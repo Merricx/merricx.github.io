@@ -1,4 +1,779 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Merricx personal blog RSS Feed]]></title><description><![CDATA[My personal blog]]></description><link>https://merricx.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Thu, 18 Aug 2022 06:22:38 GMT</lastBuildDate><item><title><![CDATA[Don't Roll Your Own Crypto #1]]></title><description><![CDATA[The series of cryptanalyzing encryption scheme from local academic paper or article. This first series will discuss about cryptanalysis of image encryption based on Chaos function.]]></description><link>https://merricx.github.io/dont-roll-your-own-crypto-1/</link><guid isPermaLink="false">https://merricx.github.io/dont-roll-your-own-crypto-1/</guid><pubDate>Wed, 28 Jul 2021 15:42:00 GMT</pubDate><content:encoded>&lt;h1 id=&quot;introduction&quot;&gt;&lt;a href=&quot;#introduction&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Introduction&lt;/h1&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Merricx personal blog RSS Feed]]></title><description><![CDATA[My personal blog]]></description><link>https://merricx.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Mon, 17 Apr 2023 20:40:06 GMT</lastBuildDate><item><title><![CDATA[The Adventure of Attacking AES]]></title><description><![CDATA[How to practically break reduced-round AES from 1 round until 3 round]]></description><link>https://merricx.github.io/adventure-of-aes/</link><guid isPermaLink="false">https://merricx.github.io/adventure-of-aes/</guid><pubDate>Sun, 16 Apr 2023 16:58:00 GMT</pubDate><content:encoded>&lt;p&gt;In this article, I want to share my personal learning journey and experience on how I practiced to do cryptanalysis on reduced round AES step by step from the easiest one which is 1-round AES until 3-round AES. &lt;/p&gt;
+&lt;p&gt;The attack that we will described here just mainly focus on the differential cryptanalysis of AES S-Box. According to the AES proposal &lt;sup&gt;&lt;a href=&quot;#references&quot;&gt;[1]&lt;/a&gt;&lt;/sup&gt;, it is claimed that AES is resistant against differential cryptanalysis above 4-round. So, how about round below it? Lets find out!&lt;/p&gt;
+&lt;h1 id=&quot;preliminaries&quot;&gt;&lt;a href=&quot;#preliminaries&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Preliminaries&lt;/h1&gt;
+&lt;p&gt;Before we dive into the attack, it’s good idea to refresh our reference on short preliminaries about AES operations and basic of the attack that we gonna use.&lt;/p&gt;
+&lt;h2 id=&quot;aes&quot;&gt;&lt;a href=&quot;#aes&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;AES&lt;/h2&gt;
+&lt;p&gt;Advanced Encryption Standard (AES) is the algorithm that was selected by NIST that originally named Rijndael. AES use &lt;em&gt;Substitution-Permutation Network&lt;/em&gt; (SPN) as its main design. &lt;/p&gt;
+&lt;p&gt;AES is 128-bit block cipher which its state represented as byte matrix of size 4x4. It consist of 4 main operations in single round which are &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;ShiftRows&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt;. &lt;/p&gt;
+&lt;p&gt;The number of rounds used in AES depends on the key size, where 128-bit use 10 rounds, 192-bit use 12 rounds, and 256-bit use 14 rounds. In the first round, an additional &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt; is used, and in the last round, &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt; operation is omitted.&lt;/p&gt;
+&lt;p&gt;This is how AES encryption works in nutshell:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;AES&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;plaintext&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; master_key&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; n_rounds&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+
+    round_key &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; key_schedule&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;master_key&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; add_round_key&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;plaintext&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; round_key&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; i &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; n_rounds&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; sub_bytes&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; shift_rows&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; mix_columns&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; add_round_key&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; round_key&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;i&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;# last round without MixColumns&lt;/span&gt;
+    state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; sub_bytes&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; shift_rows&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    state &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; add_round_key&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; round_key&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;n_rounds&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; state&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h3 id=&quot;subbytes&quot;&gt;&lt;a href=&quot;#subbytes&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;SubBytes&lt;/h3&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; will apply substitution mapping on each byte of the state against S-Box. This operation is the only operation in AES that is not linear.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/db12ff41e9da9ba552916974fcb5ed3f/34e70/subbytes.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 33.108108108108105%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAHCAYAAAAIy204AAAACXBIWXMAAAsSAAALEgHS3X78AAABEklEQVQoz31R246CQAzl/7/LfdonkcswIpcRuQQREZ4IcHZON5qN2dikaZvpOT3tOBelUJUlsixDaWNRFBjHEdu2idPeY98P8FWBJC1gTP7CDcMAx+x2uOQ59PGIJElwPp9xu91ehO9OK6sWX98GrhcjTROcTifklkMIVRDgaMk8z8N+v4fv+6jrGv/Zk5ADw1AhiiIhIt4Yg+v1Ckdrjb/uuq409X2P+/2OaZpkMmuC4jiWFbWOJA+sIGXPFoahVZvC4RRKZsFIp8J1XbEsi8RnPs+zqGyaRvoogGQ8FVXyXA4nMCExG/hABZ+Mq5GQWGKIPRwOv4Rd18lKLLgW7/N4PD5+Cvu4RVVV4uRo21YG/QDqTgtnL39xXAAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;subbytes&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/db12ff41e9da9ba552916974fcb5ed3f/fcda8/subbytes.png&quot;
+        srcset=&quot;https://merricx.github.io/static/db12ff41e9da9ba552916974fcb5ed3f/12f09/subbytes.png 148w,https://merricx.github.io/static/db12ff41e9da9ba552916974fcb5ed3f/e4a3f/subbytes.png 295w,https://merricx.github.io/static/db12ff41e9da9ba552916974fcb5ed3f/fcda8/subbytes.png 590w,https://merricx.github.io/static/db12ff41e9da9ba552916974fcb5ed3f/efc66/subbytes.png 885w,https://merricx.github.io/static/db12ff41e9da9ba552916974fcb5ed3f/34e70/subbytes.png 1053w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;h3 id=&quot;shiftrows&quot;&gt;&lt;a href=&quot;#shiftrows&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;ShiftRows&lt;/h3&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;ShiftRows&lt;/code&gt; is the operation that will shift byte position each row to the left depending on the row. Second row will be shifted 1 to the left, third row shifted 2 to the left, and fourth row shifted 3 to the left (first row stay the same).&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/ba452bab160938260c333bedeea4b8ce/34e70/shiftrows.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 33.108108108108105%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAHCAYAAAAIy204AAAACXBIWXMAAAsSAAALEgHS3X78AAABPElEQVQoz32R227CMBBE+f9P6kMrhKja0qpN6jS+JrHjJEBoLsATAqa2JfqAECutNpHGs2fsScor1HWDoijcrGGtxW63w/l8Du3revb9iIRaZLmFMTqcqyqLcRwxmb1qaG0hBEeWZSjLEl3X/Rtet6+6aTFfGMREIs8zKKVQaI3BGz7OUnAuQAhBFEVIkgTL5RK36mLoF6YpBWPMwWhnKrH4LEBY6w0FKOWBkHOOOI6DqO97DMOA/X4fovh/YwyklCEi5wxKCnyTFG8fHO9fCikz3pA6kXJb8oDu2xOeTiccj8cwL9+HwyFQrlaroPMAUcwwfZZgIsd63WDy8ESgTRk2eoEQIhDcq81m4+5bYTr/weyFuejUpaRoGmfIZBsiWVuGWP5+ttvt3UfxOk/JZePIKvTdr6Nbo21b/AE4JAlhWMGbLgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;shiftrows&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/ba452bab160938260c333bedeea4b8ce/fcda8/shiftrows.png&quot;
+        srcset=&quot;https://merricx.github.io/static/ba452bab160938260c333bedeea4b8ce/12f09/shiftrows.png 148w,https://merricx.github.io/static/ba452bab160938260c333bedeea4b8ce/e4a3f/shiftrows.png 295w,https://merricx.github.io/static/ba452bab160938260c333bedeea4b8ce/fcda8/shiftrows.png 590w,https://merricx.github.io/static/ba452bab160938260c333bedeea4b8ce/efc66/shiftrows.png 885w,https://merricx.github.io/static/ba452bab160938260c333bedeea4b8ce/34e70/shiftrows.png 1053w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;h3 id=&quot;mixcolumns&quot;&gt;&lt;a href=&quot;#mixcolumns&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;MixColumns&lt;/h3&gt;
+&lt;p&gt;The third operation which is &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt; will transform all bytes in the same column by multiply them with the constant 4x4 Matrix over the field $GF(2^8)$.&lt;/p&gt;
+$$
+\begin{bmatrix}
+2 &amp;3 &amp;1 &amp;1\\
+1 &amp;2 &amp;3 &amp;1\\
+1 &amp;1 &amp;2 &amp;3\\
+3 &amp;1 &amp;1 &amp;2
+\end{bmatrix}
+\begin{bmatrix}
+a0\\
+a1\\
+a2\\
+a3
+\end{bmatrix}
+=
+\begin{bmatrix}
+b0\\
+b1\\
+b2\\
+b3
+\end{bmatrix}
+$$
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/90437da687b0642041d3b8804ee9459f/34e70/mixcolumns.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 33.108108108108105%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAHCAYAAAAIy204AAAACXBIWXMAAAsSAAALEgHS3X78AAABLElEQVQoz21Ra0/CQBDs//858lAUjX7TGNHWK5S+oL0GCI9CH58I7dhZCzGGTSbb7t3OzuwZyh5jsVhgPp9LTpIERVGgrmsB43/O8hzKtjGbzRDH8aUvyzIY98PHpqjheR7CMITWGmmaXgj/oqoqIeSdTrcPuyUNggBRFP0Svr69w/cDKKVgmqZcWq1WuBZVq1DrBE/PL/BbIs/zJW+3WxiDhyEcZyoKXdeFZVlyuN/vcTgcUJalTOY/7dEFVXV6fYwnEziE44hKKjdu7wZCxB2ySFAh7Z1OJ8nn7+PxKAq5r37Tp5QtvUEQSv9yuYTR6fZEEQ8IKuWSr0V9saxx0/R9jEbNunxRSAjhdzOF1jiVtvggefOK1x7lTLher/H5ZcouSbLb7aS22WzwA4fHBsqkvUMkAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;mixcolumns&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/90437da687b0642041d3b8804ee9459f/fcda8/mixcolumns.png&quot;
+        srcset=&quot;https://merricx.github.io/static/90437da687b0642041d3b8804ee9459f/12f09/mixcolumns.png 148w,https://merricx.github.io/static/90437da687b0642041d3b8804ee9459f/e4a3f/mixcolumns.png 295w,https://merricx.github.io/static/90437da687b0642041d3b8804ee9459f/fcda8/mixcolumns.png 590w,https://merricx.github.io/static/90437da687b0642041d3b8804ee9459f/efc66/mixcolumns.png 885w,https://merricx.github.io/static/90437da687b0642041d3b8804ee9459f/34e70/mixcolumns.png 1053w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: we can treat this operation as black box function that transform 4-byte input into another 4-byte output.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;addroundkey&quot;&gt;&lt;a href=&quot;#addroundkey&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;AddRoundKey&lt;/h3&gt;
+&lt;p&gt;The last operation is &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt; which simply XOR the state with the &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt;. &lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/82c1e/addroundkey.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 53.37837837837838%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAALCAYAAAB/Ca1DAAAACXBIWXMAAAsSAAALEgHS3X78AAABU0lEQVQoz51S2W6DQAzc//+f9q1PfWulSi2Bch/hCEdQRIAgxDHFrkgDSaSolkbsmvWsx7Pi4yuA45iwLAtJkmAcxwXm+MsNvK+bAu/6MxzPhG058DwPYRhCfG48mKYOWZYRRRHWcTqd0LbtVb6sCrxJLwgjf6o3mZDqhW0Z02YLRVGmTh1UVYWyLJmI1rZtc0Fd1yiKgrHb7RDHMVx7yySapsH3fT4rZFlhuZIkcaLv+zMo0jRDnucst+s6Bv07Ho+syjAMrtV1nXlEmqasnZBl2WJuFCS3aZqbo3Bdl7ul7oIg4K8ggmEYrozop1zXDyybQF3RuaVBy1pai/XNs4tl9o1YfUKcZNOMXVYwm7NWcRli/Uzmw3niwti8TjICdpBwSXgPNzr8JYyTFLKinZ8EGfZQh/cIwzBg91RVZSfJxdmcfxEeDgeeG72z/X7/8Ax/AEedTUsGRt63AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;addroundkey&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/fcda8/addroundkey.png&quot;
+        srcset=&quot;https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/12f09/addroundkey.png 148w,https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/e4a3f/addroundkey.png 295w,https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/fcda8/addroundkey.png 590w,https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/efc66/addroundkey.png 885w,https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/c83ae/addroundkey.png 1180w,https://merricx.github.io/static/3ba8192fe1d16a4d4a37008151a31ff6/82c1e/addroundkey.png 1398w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt; is the subkey that expanded from &lt;code class=&quot;language-text&quot;&gt;MasterKey&lt;/code&gt; using the Key Schedule function, so it will generate different &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt; on each round of AES. &lt;/p&gt;
+&lt;p&gt;We can ignore how the Key Schedule function works since this is irrelevant with our attack. The only thing we must remember here is with any known &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt;, we can recover its &lt;code class=&quot;language-text&quot;&gt;MasterKey&lt;/code&gt; since Key Schedule function is invertible.&lt;/p&gt;
+&lt;h2 id=&quot;differential-cryptanalysis&quot;&gt;&lt;a href=&quot;#differential-cryptanalysis&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Differential Cryptanalysis&lt;/h2&gt;
+&lt;p&gt;Differential Cryptanalysis is one of the most powerful method to attack block cipher and together with the Linear Cryptanalysis become two &lt;em&gt;de facto&lt;/em&gt; standard of cryptanalysis against block cipher.&lt;/p&gt;
+&lt;p&gt;Differential cryptanalysis usually uses bitwise XOR to define the “difference”. XOR operation is very useful given the fact that it can “bypass” or skip linear operation on block cipher.&lt;/p&gt;
+&lt;p&gt;In the context of AES, assume we have the following equation:&lt;/p&gt;
+$$
+c_1 = ARK(MC(SR(p_1))) \\
+c_2 = ARK(MC(SR(p_2))) \\
+$$
+&lt;p&gt;where $ARK$, $MC$, and $SR$ denote &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;ShifRows&lt;/code&gt; operation respectively. &lt;/p&gt;
+&lt;p&gt;Then, lets assume differential of two plaintext and ciphertext is XOR between these pair that denoted by $p_1 \oplus p_2$ and $c_1 \oplus c_2$ respectively, then the equation become:&lt;/p&gt;
+$$
+c_1 \oplus c_2 = ARK(MC(SR(p_1 \oplus p_2)))
+$$
+&lt;p&gt;Since $ARK$ is just XOR state with the &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt; and both of $p_1$ and $p_2$ XORed with the same &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt;, we can simplify the equation by removing $ARK$ at all.&lt;/p&gt;
+$$
+\begin{equation}
+\begin{aligned}
+c_1 &amp; = MC(SR(p_1)) \oplus RoundKey \\
+c_2 &amp; = MC(SR(p_2)) \oplus RoundKey \\
+c_1 \oplus c_2 &amp; = MC(SR(p_1 \oplus p_2)) \oplus RoundKey \oplus RoundKey \\
+c_1 \oplus c_2 &amp; = MC(SR(p_1 \oplus p_2))
+\end{aligned}
+\end{equation}
+$$
+&lt;p&gt;And that’s it, we basically already bypass all linear operation even without the knowledge of &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt;. &lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Imagine AES without &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; operation, then if you know &lt;code class=&quot;language-text&quot;&gt;c1&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;c2&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;p1&lt;/code&gt;, it is become trivial to recover &lt;code class=&quot;language-text&quot;&gt;p2&lt;/code&gt;, just like what happen in simple XOR cipher.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;This way, we only need to focus on one operation that is non-linear which is &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt;. &lt;/p&gt;
+&lt;p&gt;Consider $(x, y)$ for every possible byte values. Then, let $\alpha = x \oplus y$ and $\beta = SB(x) \oplus SB(y)$ where $SB$ denotes &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; operation. We are trying to analyze how many times $\alpha$ and $\beta$ hold.&lt;/p&gt;
+&lt;p&gt;For example, let $\alpha = 8$ and $\beta = 125$. Over all 256 possible bytes, there are two possible byte pair $(x, y)$ that satisfy the condition which are $(1, 9)$ and $(9, 1)$. &lt;/p&gt;
+$$
+\begin{equation}
+\begin{aligned}
+8 &amp; = 1 \oplus 9 = 9 \oplus 1 \\
+125 &amp; = SB(1) \oplus SB(9) = SB(9) \oplus SB(1)
+\end{aligned}
+\end{equation}
+$$
+&lt;p&gt;So, the probability of ($\alpha$, $\beta$) being $(1, 8)$ are 2/256. &lt;/p&gt;
+&lt;p&gt;And that is what Differential Cryptanalysis is all about, we find the probability of input differential ($\alpha$) that will resulting to the specific output differential ($\beta$) through S-BOX.&lt;/p&gt;
+&lt;h2 id=&quot;differential-in-aes-s-box&quot;&gt;&lt;a href=&quot;#differential-in-aes-s-box&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Differential in AES S-box&lt;/h2&gt;
+&lt;p&gt;In order to find differential property of S-Box, we must first find the distribution of the differences between pairs of input and pairs of output values. This can be achieved from S-Box &lt;strong&gt;Differential Distribution Table&lt;/strong&gt; (DDT), which is the table that shows the number of occurences every possible input difference that results in coresponding output difference.&lt;/p&gt;
+&lt;p&gt;S-Box DDT can be quickly built with the following Python code:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;SBOX &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# 1D list of AES S-Box&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;generate_sbox_ddt&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    table &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; i &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; j &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+            diff_input &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; i &lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt; j
+            diff_output &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; SBOX&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;i&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt; SBOX&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;j&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+            &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+                table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_output&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;
+            &lt;span class=&quot;token keyword&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+                table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;
+                table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_output&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; table&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If we look closely on the S-Box DDT result, each row of table have kind of similar occurence distribution where it contains either 0 or 2 and one time occurence of 4 (except the first row where input equal to zero).&lt;/p&gt;
+&lt;p&gt;Below is the sample of the result showing 2nd and 65th row:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;[0, 2, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 0, 0, 2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 2, 4, 0, 2, 2, 0, 2, 0, 0, 0, 0, 2, 2, 0, 0, 2, 0, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 2, 2, 2, 0, 2, 2, 0, 2, 0, 2, 2, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 0, 0, 0, 2, 2, 2, 2, 0, 2, 0, 0, 0, 2, 0, 0, 2, 0, 0, 2, 2, 0, 0, 0, 2, 0, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 2, 0, 0, 0, 2, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 0, 2, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2, 0, 2, 2, 0, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 0, 0, 2, 0, 0, 2, 0, 0, 2, 2, 2, 0, 0, 2, 0, 0, 0, 2, 2, 2, 0, 2, 2, 0, 0, 0, 2]
+
+[0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 0, 2, 0, 0, 2, 2, 0, 0, 0, 0, 2, 2, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 2, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 4, 2, 0, 0, 0, 2, 0, 2, 2, 0, 2, 2, 0, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 2, 2, 0, 0, 2, 0, 2, 0, 2, 0, 0, 0, 2, 0, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 2, 2, 2, 2, 0, 0, 2, 2, 0, 2, 2, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 0, 2, 2, 0, 2, 0, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 2, 0, 2, 2, 0, 0, 0, 2, 2, 0, 2, 2, 2, 0, 0, 0, 0, 0, 2, 2, 0, 2, 0, 0, 0, 2, 0, 0, 2, 2, 2, 0, 0, 0, 2]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If we try to count those, we will find that on each row (except 1st row), 0 appears 129 times, 2 appears 126 times, and 4 appears 1 time.&lt;/p&gt;
+&lt;p&gt;Lets consider $(\alpha, \beta)$ as input and output difference pairs of single AES S-box and $\alpha \neq 0$. Then we have following observation based from the S-Box DDT:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;For 129/256 of possible pairs $(\alpha, \beta)$, there is no such pair $(x, y)$ that $x \oplus y = \alpha$ and $SB(x) \oplus SB(y) = \beta$&lt;/li&gt;
+&lt;li&gt;For 126/256 of possible pairs $(\alpha, \beta)$, there exist two pairs $(x, y)$ such that $x \oplus y = \alpha$ and $SB(x) \oplus SB(y) = \beta$&lt;/li&gt;
+&lt;li&gt;For 1/256 of possible pairs $(\alpha, \beta)$, there exist four pairs $(x, y)$ such that $x \oplus y = \alpha$ and $SB(x) \oplus SB(y) = \beta$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;From the above observation, can be implied that if we know a pair of $(\alpha, \beta)$ then we can quickly recover $(x, y)$ which is the actual input/output value of the S-Box &lt;sup&gt;&lt;a href=&quot;#references&quot;&gt;[2]&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+&lt;h1 id=&quot;1-round-aes&quot;&gt;&lt;a href=&quot;#1-round-aes&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;1 Round AES&lt;/h1&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/0ec65/round1-0.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 39.86486486486486%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAICAYAAAD5nd/tAAAACXBIWXMAAAsSAAALEgHS3X78AAAA+klEQVQoz52Rx26GQAyEef/X48CN3nvv4OSztL+i3JKVBi+2mRkb675vadtW6rpW9H0vwzDIdV1ynqeC+280TSNFUUgQBJIkiVRVJcdxiPU8j8zzrMjzXPZ912bel2WRdV0/2LZNI3nXdVUYUsi6rlNyC1cQ+b4vnudppNE4BdM0qcA4jp875HyXpqkCUrisOI51ZJQoQBCGoRajKJKyLLVGxHmWZVozOXohJqcjk4QdRxRRdhxHR2c3jEIzfWYtuMQIAphABCPs25Lv83M3NLNXsz8i5KibO5Efgxi7tG1bDb3vKxaP/xwIEWc6xjfiSvhXGELIDHDLpF9r32TxJ59XigAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round1 0&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/fcda8/round1-0.png&quot;
+        srcset=&quot;https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/12f09/round1-0.png 148w,https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/e4a3f/round1-0.png 295w,https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/fcda8/round1-0.png 590w,https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/efc66/round1-0.png 885w,https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/c83ae/round1-0.png 1180w,https://merricx.github.io/static/bb8d15f8bce519db63e888cd02422327/0ec65/round1-0.png 2009w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Let’s start breaking 1 round AES with the differential cryptanalysis!&lt;/p&gt;
+&lt;p&gt;Consider $(p_1, c_1)$ and $(p_2, c_2)$ are plaintext-ciphertext pairs of 1-round AES, where all these values are known to us and we want to find the &lt;code class=&quot;language-text&quot;&gt;MasterKey&lt;/code&gt; (known-plaintext scenario). &lt;/p&gt;
+&lt;p&gt;Let differential of $(p_1, p_2)$ denoted by $\alpha$ and differential of $(c_1, c_2)$ denoted by $\beta$.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/24978624e42f668e8563e771d7f0fd22/b5cea/round1-1.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 52.02702702702703%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAAsSAAALEgHS3X78AAABOElEQVQoz32SDcuCUAyF7///fSZJmmKJRX6lWZra4hksfIPewYV7t3O3s7O5ZVmkLMvPqapKrtertG0r8zzL5XJR3+l0kjRNBSNeFIXim6aR2+2mmHEcxT2fT+n7XoFd12kQIyHgw+EgURTJbreT7XYrcRxLnueKmaZJcRg57ve7OJxUIwALDgyoSOzbwMGMwnVd651k4IdhEAfo9Xop+PF4aIA37VrM4ma8kQo8Sdc5HG2RGTZZlkmSJH8+/jrY+XxWOUy2IAjEkYQW0W+/30sYhv8mW7M5Ho/ied6nZci4dSu0aUP5ZbRqxlS/8Q4AQsOS9tGEijDmg8VspWwb8FuMN39pXadsVWzfMHRlZVgXdPJ9XzabjfqQyYa4vuva0CaVYEolKuLjbqvDscnigy0YksDMpILEG4SRBE6w0kGFAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round1 1&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/24978624e42f668e8563e771d7f0fd22/fcda8/round1-1.png&quot;
+        srcset=&quot;https://merricx.github.io/static/24978624e42f668e8563e771d7f0fd22/12f09/round1-1.png 148w,https://merricx.github.io/static/24978624e42f668e8563e771d7f0fd22/e4a3f/round1-1.png 295w,https://merricx.github.io/static/24978624e42f668e8563e771d7f0fd22/fcda8/round1-1.png 590w,https://merricx.github.io/static/24978624e42f668e8563e771d7f0fd22/efc66/round1-1.png 885w,https://merricx.github.io/static/24978624e42f668e8563e771d7f0fd22/b5cea/round1-1.png 1140w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;We then apply $MC^{-1}$ and $SR^{-1}$ to $\beta$. Now we have one-on-one byte relation of $\alpha$ and $\beta$ through S-Box.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/291436cf178e716bfc221df34125211d/772aa/round1-2.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 21.62162162162162%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAECAYAAACOXx+WAAAACXBIWXMAAAsSAAALEgHS3X78AAAA50lEQVQY002PT0+DQBDF+fB+gH4C7168efbgxcTERNNo6Vr2D6WULUoQCMgWfu6S2PiSSSZv3ryZF+HRti3jOIaWeZ4vFVA3PcYYyrLkT5vnOaey4mecFm4Yhss8ktqSZYdF1Pc9/zFPDhU/IoRAa4Nzo188sYkFMn6i+ZTe9EySJOwSwau8J1pdv7N+EyglqaqKruuwtuC76ejqAvlw5T9UmDRd+OKYs5MH9utbzMsNdTsiveGH3HD3vCLSWiOlXGKFONM0LRGcc77OKL33xxRBF+bWWrbbmDQ78lU1DD5V+FApTWYsvzlIKtBhmG8+AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round1 2&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/291436cf178e716bfc221df34125211d/fcda8/round1-2.png&quot;
+        srcset=&quot;https://merricx.github.io/static/291436cf178e716bfc221df34125211d/12f09/round1-2.png 148w,https://merricx.github.io/static/291436cf178e716bfc221df34125211d/e4a3f/round1-2.png 295w,https://merricx.github.io/static/291436cf178e716bfc221df34125211d/fcda8/round1-2.png 590w,https://merricx.github.io/static/291436cf178e716bfc221df34125211d/efc66/round1-2.png 885w,https://merricx.github.io/static/291436cf178e716bfc221df34125211d/c83ae/round1-2.png 1180w,https://merricx.github.io/static/291436cf178e716bfc221df34125211d/772aa/round1-2.png 2042w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Then, consider $x$ and $y$ where we try all possible values until they satisfy following conditions:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;$x \oplus y \neq 0$&lt;/li&gt;
+&lt;li&gt;$x \oplus y = \alpha$&lt;/li&gt;
+&lt;li&gt;$SB(x) \oplus SB(y) = \beta$. &lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;According to the differential observation that explained before, it should exist two possible pairs $(x, y)$ that satisfy those conditions.&lt;/p&gt;
+&lt;p&gt;Alternatively, we can optimize our finding of possible $(x, y)$ value using S-Box DDT that we built previously. This way, we can just do table lookup of $\alpha$ and $\beta$ to quickly find possible $(x, y)$ instead of using brute-force. But, we need to slightly modify our S-Box DDT to store the actual value of $(x, y)$ instead of the number of occurence.&lt;/p&gt;
+&lt;p&gt;Below is the Python implementation that generate S-Box DDT lookup:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;python&quot;&gt;&lt;pre class=&quot;language-python&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;SBOX &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;# 1D list of AES S-Box&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;generate_sbox_ddt&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    table &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; i &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; j &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+            diff_input &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; i &lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt; j
+            diff_output &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; SBOX&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;i&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;^&lt;/span&gt; SBOX&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;j&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+            &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;len&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+                table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_output&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;update&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;i&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; j&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;token keyword&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+                table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; _ &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;256&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+                table&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_input&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;diff_output&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;i&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; j&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; table
+
+ddt &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; generate_sbox_ddt&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;token comment&quot;&gt;# Lookup the table&lt;/span&gt;
+alpha &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt; 
+beta &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;
+possible_xy &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; ddt&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;alpha&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;beta&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Okay, so what’s next after we found the value of $(x, y)$ ?&lt;/p&gt;
+&lt;p&gt;Remember that before round 1, there is additional &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt; before the very first &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; operation. So, the value of $(x, y)$ is the value of either $ARK(p_1)$ or $ARK(p_2)$. Thus, we can find possible $RK_0$ by simply XORing $x$ or $y$ with the respective byte of $p_1$ or $p_2$. &lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/2fb55/round1-3.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 83.1081081081081%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAARCAYAAADdRIy+AAAACXBIWXMAAAsSAAALEgHS3X78AAACL0lEQVQ4y41T227aQBD1/z/2M/rap6pSpSpVaaUEiFoMAYqv2DEY37CN8e10ZoPNAk2UsUY769k5e+ayCk7S8te2wvZ8D6ZpommaF1979uV1iflygWC3u/B3ovSAzctPc+Ri+nMB3dIQhuE5gJTDna/30P/MYDlrZFn2DsChC3Uwh2HpCILgzI5X8ht3D5jcj7HSNKT7/f8B5ZSSPIHt2iLlJEkuUybdFzm2Ox9hEOJ4PN6URJHRO7sqKxwOB1xLB1pVFY5lecOObcGQiys76rrub2ebwYui6P0MWJ4AWUra9ww50Fmv4ThOH9SeWIiObzZQVRXL5bIHYQJ8kbDLHLZpwHWfiUQB5dvAw5c7Ha6jY7cLxOEoioTWBLodfYCpzQh4izRNxWXcrDCMBODHgYEfvzW4tgGfRkkxrGcMxxNMpyo8byNSZbCYGlKkGfTZCKPREE9Pc/GfWfI4xXEsAB9mFh7VBbTVX2zoUqVIYsT+FpHvo8hzVLQ2PA6UUkPgWV6IYGbXpSlLecgQR6FgnefZeWzKUxOOVLOKANqrDsqdlPW6SYrcSWETk0YeCSK1p/SZ4fVTfBOw6zCzq+lJtfSvokOfpp8xnoxhW/bFU5MBGawbs34O+7mjoJpq2dKhii75vvyF6WKGtX37druVY18FrCi95mQ3FJBGqQDzPO9iTt9kKKfc8KxJr4KlY/aa3NSQGfJoCCWGQrs96Wq1EmPBjWNw1pzKwnteed817B/iwicWZr17pQAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round1 3&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/fcda8/round1-3.png&quot;
+        srcset=&quot;https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/12f09/round1-3.png 148w,https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/e4a3f/round1-3.png 295w,https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/fcda8/round1-3.png 590w,https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/efc66/round1-3.png 885w,https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/c83ae/round1-3.png 1180w,https://merricx.github.io/static/1369b8cf4afd28c1a866806e7571c150/2fb55/round1-3.png 2201w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Thats it! We can iterate this process for all byte position of $RK_0$. Note that there will always be 2 possible values for each byte position of $RK_0$ (except the differential is zero), so we can do trial encryption/decryption with the obtained possible key to get the correct key with only $2^{16}$ trials.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;NOTE:&lt;/strong&gt; Because we already found &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt; of round 0, we don’t need to reverse the key expansion since this &lt;code class=&quot;language-text&quot;&gt;RoundKey&lt;/code&gt; is already equal to the AES &lt;code class=&quot;language-text&quot;&gt;MasterKey&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Python implementation of this attack can be found &lt;a href=&quot;https://github.com/Merricx/aes-attack/blob/main/round1-diff.py&quot; target=&quot;_blank&quot; rel=&quot;nofollow noopener noreferrer&quot;&gt;here&lt;/a&gt;&lt;/p&gt;
+&lt;h1 id=&quot;2-round-aes&quot;&gt;&lt;a href=&quot;#2-round-aes&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;2 Round AES&lt;/h1&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/cdaca/round2-0.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 54.72972972972974%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAALCAYAAAB/Ca1DAAAACXBIWXMAAAsSAAALEgHS3X78AAABTklEQVQoz53SR25DMQwEUN3/cF547V6/ey9wY/IIKMg2EUBQGlHDIcXyer1iu93Ger2OzWYT+/0+jsdjPJ/PeDweafa/DSZ+sVjEYDCI2WyWZ3h5v99xPp/TmqaJ+/2exJfLJe16vf7Y7XZLL7bX68XhcMg3yHa7XfT7/SgO8/k8MwF4gQKoZafTKY1yHqFklE2n07RaYZlMJvl4uVwmsUfj8Tjb4E6gOx6mTB62Wq0yxh4mSSFZBpfdbjfVtdvtVEIxvKqgAAHvrlY2Go0yrtVqRanZBCphOBxmNiphzsgktocjQYCo0+mk1aQFWJuOiNcCCvXPvt7BlK602gJqmcpMQKnfD/BzHtUWUMV8ghIlUEWN8c5ZJVVMie9lfnxGHQujZHzsebiYOkoIzS8csVZICiufzyf+syRQlf4jra1JhUj/YpVQ77TEb2sRwi9gAkQ4QxJEXwAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round2 0&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/fcda8/round2-0.png&quot;
+        srcset=&quot;https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/12f09/round2-0.png 148w,https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/e4a3f/round2-0.png 295w,https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/fcda8/round2-0.png 590w,https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/efc66/round2-0.png 885w,https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/c83ae/round2-0.png 1180w,https://merricx.github.io/static/fcc0f132337f377ec225cac5ba1d2b2a/cdaca/round2-0.png 2021w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Can we extend our previous attack to make it works against 2 round AES?&lt;/p&gt;
+&lt;p&gt;Consider $(p_1, c_1)$ and $(p_2, c_2)$ are plaintext-ciphertext pairs of 2-round AES and $(\alpha, \beta)$ are input-output difference pairs of $(p_1, p_2)$ and $(c_1, c_2)$ respectively.&lt;/p&gt;
+&lt;p&gt;If we illustrate this scenario into 2-round AES, we can bypass first &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;ShiftRows&lt;/code&gt; by swapping operation order with &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt;. Then, in the last round, we can bypass &lt;code class=&quot;language-text&quot;&gt;ShiftRows&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt;, and &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt;. So, the view become $\alpha \circ SB \circ MC \circ ARK \circ SB \circ \beta$.&lt;/p&gt;
+&lt;p&gt;Unfortunately, there are already too many operation between &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; that will significantly mess our differential distribution. Moreover, &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt; will also prevent us to work on one-on-one byte relation, since this operation works on 4-bytes at once. This is already too much and too complex. Thus, we need different strategy that much more simple. &lt;/p&gt;
+&lt;p&gt;The key point here is that we can only “bypass” &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; with differential &lt;strong&gt;once&lt;/strong&gt; at a time. But then, there are two &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; in 2-round AES, how can we bypass the other one?&lt;/p&gt;
+&lt;h3 id=&quot;half-last-round&quot;&gt;&lt;a href=&quot;#half-last-round&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Half Last Round&lt;/h3&gt;
+&lt;p&gt;To simplify our understanding of the attack, lets first assume that last round does not make use of &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt; (usually called half round). So, in the round 2, the operation flow is only $SB \circ SR \circ ARK$.&lt;/p&gt;
+&lt;p&gt;Let $\alpha$ be differential of plaintext $(p_1, p_2)$ where only the first column has &lt;strong&gt;active&lt;/strong&gt; byte, which is byte with non-zero differential. Any other value should be zero differential or &lt;strong&gt;inactive&lt;/strong&gt; byte. Since we need this spesific plaintext value, so this attack only applicable in chosen-plaintext scenario.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/8b936/round2-1.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 100%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsSAAALEgHS3X78AAACUElEQVQ4y51Vy27TQBSdz2DBJ3TFgk/gL1iyRmKFgKoqC1giKELsoVUlQKrYIPGqlELZIIRKiJLUiZ/x+1UndWLH9mFmGocmTYPLSFdj3Ttz5tw7544JJkNTVRRFwb/ZXH5fdJBQfAdX3oemO3BdB1EUzQBfGLC7vYLOx5voOQnarQZ6vR7yPP9/QPH1VXR2b8NwEwiHLZimWQlwUXnYTKRXV9B6fwuC4uPXwU+Ioogsy84FnAcqTvk5oPz2GpS9VZh+CkXuQtO05YAnAT4XkzVlRjzlLI2RZykGg2OkacqDSy+lBJvEhnE8LRMjQsotzJkkyWw6C6xkE41i3Nh9ic+NH/BMC7phcAxSntRsNinLQeXbdOM+Lm/ew9b+J9iaDkmWIVMjLGhZFmq1Gur1OoIggG3b3JifGTuZmUFZMFl5tgPnOMLKmwfY+f4FR44HhTYGi3HA8XiMRqMBz/N4SqyW59mIlSXLOcNLm3fx4usHBKaNLlWHruv0UiY1CQKfA1cdcZpg9dsO9poHCByXZ8IIkXKB7wdTwGWXsqjPTyuDqEYMUQ3Rj0Lex/1+f6lsSl9KJaKHJyUq8r8HkTuPeljfOETgyhA6IiRJmmE6P/KJTwldXN9+zOvG9giCQLP0QdY2dDx8LuHIV2jbKXAcp1LrMWaD4fCMn6w91bH+pAlbb6N92Kncy6PRCL+pzFQqF0VRuAYZU3L/mUEBG3CtLnWqnHoVQLYmDMOpnFiXMSO6FcOwB/A9h6db9vOy52vZszaVDaPLXpp//QLOPF9z9gcv/P57W4EiyAAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round2 1&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/fcda8/round2-1.png&quot;
+        srcset=&quot;https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/12f09/round2-1.png 148w,https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/e4a3f/round2-1.png 295w,https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/fcda8/round2-1.png 590w,https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/efc66/round2-1.png 885w,https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/c83ae/round2-1.png 1180w,https://merricx.github.io/static/2a62cd934ac006b24cd5bf13a4aa0993/8b936/round2-1.png 1368w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Then, send $(p_1, p_2)$ to the encryption oracle which will give us corresponding $(c_1, c_2)$.&lt;/p&gt;
+&lt;p&gt;If we remember our previous differential observation, there are 129/256 probability that differential input/output is impossible. Instead of using possible pair of differential, we will use the opposite which is the impossible pair. We can use this property as distinguisher whether our state is in correct state or not.&lt;/p&gt;
+&lt;p&gt;So, the main idea here is to generate all &lt;em&gt;impossible&lt;/em&gt; state at the start of round 2 just before second &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; using $\alpha$. First, we want to bypass &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; using S-Box DDT like our previous attack on 1-round. But here, instead of finding possible S-Box output differential, we want to find impossible S-Box output differential. This will result in 129 impossible byte for each $\alpha$ denoted by $\mathbf{S} = (S_1, \ldots, S_{129})$. Then, for each $S_i$ we apply $SR$, $MC$ and store this state to the list of impossible state.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/c4cb0/round2-2.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 66.21621621621621%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAYAAACpUE5eAAAACXBIWXMAAAsSAAALEgHS3X78AAACuElEQVQ4y0VTyW4TQRScX+HGl3BAnDjwCVxzyAfAJSLcQAhFSBwQYs0lIIiCEyvsIStOhiTEzngce8bbePa1Z7GL1z02aWnUy/SrV6/qtTSZTDD7+HCTCIZpIoljsefnRVFgPB7/32dZJtbq0MKuUodjWoim9yWOwy/l04BFuYrN0xoC2xGBSZIgiiLEFNDv98U6z3Nxd0/uYXtfRlNRMDSMEhATDkRZiQUfC7UK1mrbsIcGsvwS0HEc6Lou5jRNiXFZUZ6lRKjE4MQkx02g9QKEoU8/c/RDF05QrmdjVu5szCTgXxwzGCOPZPLBWArp4NjDkzcXGPZVmJYDRqWFQQDbtgUbxmJiGcMPQgR0Ph7zSkpGfB4YPipfVFS/qwhCBkk+8/HifRe2qcP3Qyong2W7MMmYosjhegzttoaUBYKdaXnQugYxSwWoaUf4vNXGt+02wogYMpYJZK4Vz3h+4eP5Sgf9XpvAE+wejbD3u4592YDlMMwvNnBzroWNnzbGRURxKcUnJFlCZhWQiqkZxVSno78W7i2dQWs3YDsuBuTs09cnqHztkE4Brt+WcfVGE8trA5LHpqSXWk8IQ+JlcZfKVpjACzI0WgEY9SM/D6MMx3UPRc7Ac+8cBdjYCqAPEnG/NIdMmhol2V6G5dUOtURbCD8Zlxk5/cvMjMBne25GUbYadUJEWh7IOvYOu6R3DKlvZFhYakHrtBBHIdwgR/VHF82mQiA5Ts5DoaHeG4GlY7z60MPdRyp+1ezyZXkJ1jYVfCJJRlYEyQ9T7BwaxFCjMgOcKRbuPPiDRv1UtI2iavi4LuPtahcDemq35k5x5VoDD5+piEOLqoqhtEycqyY9AHKZv9ko9Kg1OjT75GSKd+s6ul1NOO/7PlYqF8SQG8Dw+GUX8/c7qG6ZovQkYdSzJlzHFvf/AeHny0Zt2dAyAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round2 2&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/fcda8/round2-2.png&quot;
+        srcset=&quot;https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/12f09/round2-2.png 148w,https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/e4a3f/round2-2.png 295w,https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/fcda8/round2-2.png 590w,https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/efc66/round2-2.png 885w,https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/c83ae/round2-2.png 1180w,https://merricx.github.io/static/27af0c1a9bc34b1f1767e158088dbe39/c4cb0/round2-2.png 2638w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;If we look at the image above, our impossible state is spreaded to all byte position despite only using 4-bytes. That is the main reason why we put active byte only on the same column.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Then, we will guess one byte of $RK_2$ for every possible values and inverse the pair of ciphertext $(c_1, c_2)$ through $ARK$, $SR^{-1}$, and $SB^{-1}$ independently. Finally, we create differential of inversed $(c_1, c_2)$ denoted by $\beta$ and compare with our generated impossible state. If $\beta$ exist in the impossible state, then we know that our guess key is incorrect and we add it to the list of impossible key.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/7edcf/round2-3.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 52.70270270270271%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAALCAYAAAB/Ca1DAAAACXBIWXMAAAsSAAALEgHS3X78AAACEUlEQVQoz11T226bQBDl/3+iD31s1Zc+tZEqNVIjuXLSi0u42ICxCWDA3BdYYDnZXcBSOhLMsJczM+cMSl5UyHKCvu8xTROEScdfwuVlgzRN5XrTMcRxgnEc0bYtoigB7ec7bdNKr7z/ZOJ+cwKlg0CRYCvw0ERw1TvYRw+krvCi3+Hk2siyHNc0h6H+ROZtkBc1jL2GrfUZypfvNja/AnS0XwBnUAnYlXDNLSz7iCSJebyB6zrwfR+XKIam/kZ2OcgEhqFBd56gCADGJtnGgoNh6HhL3dxm26OqKhl3lIEQIs/2lEI3TBQNlftJkmDg+wpjTFZG+YGJDfCCEts/LwgDD03ToMhz5PyZbU0JZEUBS1URPj5ynkuZRHI4jky2KC4TUsHzY/zTXBwdwVWGMAy5ELE8LJLPBQAxr8h8fkZo6GALR8Ira8ZpYrcqKG1lgrUmoej/JiraHw7Imw6061DV9VyhH1aIEoKuo28EkWB9h+Cww+l8BuFjUV2O8L0zH7McdU2gqztkZxMl59BxHGxcE8q7Dya+/Thxnuql0uk2NqwpcNp+5So7iK8Z0ud7WFzNgNNwTTPYhopEe+Bxir1p4uPfByhPuwtUM0VN2reAy2Cf/Qi2Zcm1rGqh6TpKLoJQVjcMpCXhUzHwIY8w1A2UMPD5x+XG0wo4Lb8MY6O8MIsi4l4KI86M4yCf1fgqXgEG+Ud9xrA0WgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round2 3&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/fcda8/round2-3.png&quot;
+        srcset=&quot;https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/12f09/round2-3.png 148w,https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/e4a3f/round2-3.png 295w,https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/fcda8/round2-3.png 590w,https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/efc66/round2-3.png 885w,https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/c83ae/round2-3.png 1180w,https://merricx.github.io/static/d0bfe0f7c8835cfa903e20ee9249fa7a/7edcf/round2-3.png 2995w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;The remaining key that is not discarded to the list of impossible key should be the correct possible key. We just need to repeat this process to the other byte position.&lt;/p&gt;
+&lt;p&gt;But, there is still one problem, that is if we only use one $\alpha$, it is not enough to discard most of the impossible key. From my experiment, single $\alpha$ will only find about 110-140 impossible keys. So, we need more $\alpha$ which means more chosen-plaintext pairs. The ideal number of $\alpha$ required would be about ~10 to discard almost all of the impossible keys.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;: using two $\alpha$ doesn’t mean we will find ~250 impossible keys, since most keys found will be duplicate to each other.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;After we discard almost all of the impossible keys, we still need to inverse the key from $RK_2$ to $RK_0$ which is the &lt;code class=&quot;language-text&quot;&gt;MasterKey&lt;/code&gt;. How we perform inverse Key Schedule is outside this article scope and will not be explained here. If you want to learn how to do it, you can take a look on my &lt;a href=&quot;https://github.com/Merricx/aes-attack/blob/main/utils.py#L134&quot; target=&quot;_blank&quot; rel=&quot;nofollow noopener noreferrer&quot;&gt;source code&lt;/a&gt; or probably implement yourself :D&lt;/p&gt;
+&lt;p&gt;Finally, we can enumerate the remaining possible key using trial encryption/decryption like our previous attack. This should only take less than $2^{6}$ trials if we use ~10 $\alpha$.&lt;/p&gt;
+&lt;h3 id=&quot;full-last-round&quot;&gt;&lt;a href=&quot;#full-last-round&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Full Last Round&lt;/h3&gt;
+&lt;p&gt;Now, as we successfully broke 2-round AES with half last round, how will we do it in the full last round?&lt;/p&gt;
+&lt;p&gt;If we re-illustrate the attack flow into full round scenario, we need 4-byte guess at once to bypass &lt;code class=&quot;language-text&quot;&gt;InvMixColumns&lt;/code&gt; operation and this alone already significantly increase time complexity from $2^{8}$ to $2^{32}$.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/5f652/round2-4.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 66.89189189189189%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAYAAACpUE5eAAAACXBIWXMAAAsSAAALEgHS3X78AAACZElEQVQ4y41TS4vTYBTNz3DjWnf+EJmFOCCzn63CbN0M+AfEjeJCBMFxQPG1E6fSiq1KcNRpO3k1SZM2jzaPpq+0aZsc75dOaxlRvHD5ktzHd+45N9xiscB4PEYcx/mZJAmYZVmWn9PpFL7v57H+YITF8vM6zurjeIyVcWEYolarQZZlCIIAVW3kSSszDAM8z+NUkMBXjuColXWjwWCAKIrQ7fjQnRMY/k9w3W4Xtm1TYQt2W0PfKGA0CPOi+XwOy7LQ6wXwejO43+7CfXk5j7FJJElEQ1XQ0rp4/PEW7leugTNNkxBWIUgaxB/vYRxchGPUkFLReDRCvV5HQ5EgaS6kD/uwXlw6azhFs9mEZbfR68Y44PfwkL8OjiEQhFPIigpVPEajdAdi/RiTaYIg8CGKIjRCYdgRGsV9OK+u5JclyYQQSmgaOizDx6PiTTwo31iOrGkacadBkevw1CMkcbTmicUUWaSGfdTe3YZ9eAGM4TheotebKky1gyflPdz7dBVcv9/PVfSDgMi1Ebl1TCejdUMmWhT1UP7Mw9G+INaeL1VOUwyHQwxHQ7QMC+2ABPW+gksp8NszpBtrsbk6b9+8ht52Ec4Bx3Hgui5REuQXsvf12uC8bTRKz1B4nofv1Sqc6gn8Z08Rk1gLis1ns3wTWH6aEaBsAW6F5LyvVoNxrBD5OiEyCwVYW1uYELI/cWR/QbgRnBECNlaTiUbbYJRKMHd2ENCzquvQyZnSm3/XPxuyRDaupqoQqNgqFuFtb2NIqOeUw0RjOav8/2rY6XRobWTUFAXtchnm7i4mYbjm+3zNL9/UxfoDoTg3AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round2 4&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/fcda8/round2-4.png&quot;
+        srcset=&quot;https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/12f09/round2-4.png 148w,https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/e4a3f/round2-4.png 295w,https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/fcda8/round2-4.png 590w,https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/efc66/round2-4.png 885w,https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/c83ae/round2-4.png 1180w,https://merricx.github.io/static/3265c240bb56f05bf40545ba9ce35e79/5f652/round2-4.png 1302w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Fortunately, there is one property in AES to overcome this problem. Remember that both of &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt; are linear operation and these operation hold the following equation:&lt;/p&gt;
+$$
+\begin{equation}
+\begin{aligned}
+ARK(MC(p)) &amp; = MC(p) \oplus RoundKey \\
+&amp; = MC(p) \oplus MC(MC^{-1}(RoundKey)) \\
+&amp; = MC(p \oplus MC^{-1}(RoundKey)) \\
+\end{aligned}
+\end{equation}
+$$
+&lt;p&gt;Which means we can swap the order operation of &lt;code class=&quot;language-text&quot;&gt;MixColumns&lt;/code&gt; with &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt; as well as &lt;code class=&quot;language-text&quot;&gt;AddRoundKey&lt;/code&gt; with &lt;code class=&quot;language-text&quot;&gt;InvMixColumns&lt;/code&gt;.&lt;/p&gt;
+$$
+\begin{equation}
+\begin{aligned}
+MC^{-1}(ARK(c)) = MC^{-1}(c) \oplus MC^{-1}(RoundKey)
+\end{aligned}
+\end{equation}
+$$
+&lt;p&gt;So, we can apply $MC^{-1}$ on our $c$ before $ARK$ as long as we also apply $MC^{-1}$ to the $RK_2$. But, we don’t really care about updating $RK_2$ right now. We just need to apply $MC$ later when we got all bytes of the possible keys.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/f7171/round2-5.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 45.94594594594595%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAJCAYAAAAywQxIAAAACXBIWXMAAAsSAAALEgHS3X78AAABxUlEQVQoz02R23KbMBCGeerO9C36Dr3qTHrb6UXvMnE7TXqRtCTGliGxOVhCgDgZGwF/V7LxZGcWBLva/XZ/p6w6xLxGVXeYppEc5PQga5oGnHN7LssSWZZBa40kiXFoGxsXKccwaDq3SKstnH8rhc9fn+FthL04jqbYuWDM7sBWL1CFxM67he/74CIF856Q7R6oWYbH5QKJDLANInx5+AinrFp4TEDmDWYbhv5MpTIIIdB1HYpMWMLD4UCFN1BlgTzLkexjHE9HpELib/gDjhlzNq17SuzgrUOiyimxt6O+NzOyv15j67rXZuM4IlcK0g/haD0Q0Ug+2L3E+xxPboA4DolQXXc4jefGTdsioILJs2tpG7pj3tsogre4g4Mr4XQVo++PlsREjqfTJTpvFghe35CWtRVFn87rUaa54HAS3uLnn5jIlMGwKuNSOFvdY+O5KIoC/OUXonCHQpUImAdJMZ7ssXAf4aUxOpHjw+0NnGBX4eYbI5XTK+V4GY9Hb/CWS0sSvTJsGIOUEoytIZPQirIigdJSoZUFPv3+Dqc1ydGekCvMAs2ja9ptVVX2+9Rr1HVt/5t/RrC+72Hun3MHTOT/Ae71qj5phk5yAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round2 5&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/fcda8/round2-5.png&quot;
+        srcset=&quot;https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/12f09/round2-5.png 148w,https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/e4a3f/round2-5.png 295w,https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/fcda8/round2-5.png 590w,https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/efc66/round2-5.png 885w,https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/c83ae/round2-5.png 1180w,https://merricx.github.io/static/3de192a96ca7edecdee7444096225c50/f7171/round2-5.png 3456w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Thats it! There is no other difference with how we attack half round.&lt;/p&gt;
+&lt;h1 id=&quot;3-round-aes&quot;&gt;&lt;a href=&quot;#3-round-aes&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;3 Round AES&lt;/h1&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/efa1a/round3-0.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 68.91891891891892%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAAAsSAAALEgHS3X78AAABk0lEQVQ4y53UR45jMQwEUN3/dt4Zht3OOeds9TwCbDRmN2OAoEQWiyXqy+X1etXNZlNXq1Vdr9d1t9vVw+FQn89nfTweYdZ/G/x8Pq+9Xq9OJpO6XC4DW97vdz2dTmGz2azebrcgPp/PYZfL5ceu12t48a+vr7rf76MGOVHj8bgWm+l0Gp263W54QEp5djweoyHl1gyxOiSpELaMRqO63W7rYrEIgKLhcBgq5QDlUoVj8mJyMNbwmhSSdVDQ6XSCsNFohAqKgeUVItKMl8uTDQaDwDWbzVqyqwLyAbKQ9fv9yGWxGI8AUbvdDhOnuFjksM3N2izMjDcOMV4sL4wX05w5WRxZJ8okW61WkOqco5ADpiKVawRD+W/F1gUBqWaCBEjMGBACimvo2OKaIKUyb5n93HJ+FnkcxUjzWI6CCI5KeyLk7WFyNEUivyEfqyLdACmy1sTlaJJ7x/s9lpx/qX9+9/s9iAB5z1EyX5C4WL4We8/PmnLNElM+n0/9n593SxWV1FojDYVI/8WSMP8gkOZL+Qb81yVZ+22+1QAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round3 0&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/fcda8/round3-0.png&quot;
+        srcset=&quot;https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/12f09/round3-0.png 148w,https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/e4a3f/round3-0.png 295w,https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/fcda8/round3-0.png 590w,https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/efc66/round3-0.png 885w,https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/c83ae/round3-0.png 1180w,https://merricx.github.io/static/b7cdc09b99fde544b9e43876dfb13668/efa1a/round3-0.png 2040w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Good news! We can actually extend our previous attack to work against 3-round AES. We can think this as “2-round AES with additional round at the beginning”.&lt;/p&gt;
+&lt;p&gt;Let $\alpha$ be differential of plaintext $(p_1, p_2)$ where only the &lt;strong&gt;first&lt;/strong&gt; byte has active byte, the rest are inactive. If we illustrate this state and go through first round transformation, the state will end up exactly as the state in the first round of 2-round attack.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/6fc98/round3-1.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 45.94594594594595%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAJCAYAAAAywQxIAAAACXBIWXMAAAsSAAALEgHS3X78AAABpUlEQVQoz4VSTYvUQBDNX/YnePImggcRvHhRxIOCiCIqsi6uos6gXsb9mHQmnXQmmU3S+egkPUk/q9sNrLJiwYN0ddWrV6/j4VKoUUOqFkPfu/MeBjzPwHwfTdO43LaVOF2fIUsz0DXUXoPFEUQco+s6eD01t0q54menSzz+eoDwjAhkheMiwe2jF+B+gIgapv0ed7+9w9H3JTZBAOgJj06+4PrhUxRcIN1l8NI0RRRFGMcRRZ6DMeYU5fSdn9N5vUZAzZxzVHUFwSP8XK2cSnQadxZvce31A+wYR5QIeJdXlnUNTuQWVrUeBvjMd0OEEJimyQ3yaWCyTYDR4EOyxv0fhyiTFFVTwzPGuEIbhtbX1CDDEBUpV+SJIuIZ1iNrkdYa/cVdrzqHmcMpNBcKnywP8HD5HsHqGNlmA5DC/wUrUnzenKAlz2VVwYtpvcjKL2rcXLzCjY/PkZPBu/MdDL2sHWa3uAo2KqoJRez8tnZ4A6lQw+/f5N7iDW59egnBQmypyFowE/4dc85aIEvp1m/b9s9HUbJ0GOsGuixhZm+vIPxX/heE56qStnxz4AAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round3 1&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/fcda8/round3-1.png&quot;
+        srcset=&quot;https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/12f09/round3-1.png 148w,https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/e4a3f/round3-1.png 295w,https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/fcda8/round3-1.png 590w,https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/efc66/round3-1.png 885w,https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/c83ae/round3-1.png 1180w,https://merricx.github.io/static/2fe969fa59e2aed2932e632035b17f88/6fc98/round3-1.png 2161w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Okay, so the only problem now is how can we bypass this &lt;code class=&quot;language-text&quot;&gt;SubBytes&lt;/code&gt; in the first round?&lt;/p&gt;
+&lt;p&gt;We can guess one byte of $RK_0$ for every possible values denoted by $GK_0$ and then apply 1 round transformation to the plaintext $(p_1, p_2)$ through $ARK$, $SB$, $SR$, and $MC$ independently (note that we apply $ARK$ of round 0, instead of round 1). After that, we create differential of transformed $(p_1, p_2)$ denoted by $\alpha$ and finally we are in the same situation as the previous 2-round attack.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/65c7e/round3-2.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block;  max-width: 590px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 47.2972972972973%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAJCAYAAAAywQxIAAAACXBIWXMAAAsSAAALEgHS3X78AAABxUlEQVQoz11SW26cQBDktPn0CXKGHCAn8EeUzyhypESxvZITaRVZG9trwMvwGmB4DI9ZFsNCpZnYjklLI01Toyqqu4wy2iCOY/R9j9d1bGP4D9fgPNb9obiHtd2grBrqRqTBBq7noW1bjU/TpI/Bfp3CdRnKssJApHVV4nEAUvcKD7+/gkeCSBRS+wzm7Ro+T6GKHazPb8CYizwvME7jP8Id47BtmwhL0gUkEY/HAYVs4LAASZKgIpFMKjgOQ5xk6FUE79sJwjBEXhQLZ8ZeNfq3y6aBXK1QcI5aKQxDD/WEzcr9Y4emqXE4HGaDUCUncTlf8UMwbH0GVdcwXmY2juCWBXO7hR8EC9WZ8P8ajhNiIeZx4uT7KT7+PEfouDPhhHEc9SNJCsx1IRLxTLUgm6/P/TQd0ZCTud7fXOD87hpZnMA4u+AIQq7nNBPv963e4o1Z4mrtIc8SSkCL1Vpic8sgi5RGMuDDJxdRFNESq4UL495yEZDFPM/RdR3SNNUR8nwOy3boewYpJUIusCNLRS7A4wZv391R3BKNP5n5u2UhKG++r7f8WqnrDjpOMzYMA9q9gmmaJChofsCXy4Bwj5xVixz+AbZPqIk7Pw9jAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;round3 2&quot;
+        title=&quot;&quot;
+        src=&quot;https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/fcda8/round3-2.png&quot;
+        srcset=&quot;https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/12f09/round3-2.png 148w,https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/e4a3f/round3-2.png 295w,https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/fcda8/round3-2.png 590w,https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/efc66/round3-2.png 885w,https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/c83ae/round3-2.png 1180w,https://merricx.github.io/static/4233894c210027914dd18b6c83b4910e/65c7e/round3-2.png 2577w&quot;
+        sizes=&quot;(max-width: 590px) 100vw, 590px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;From here, the flow is relatively same as 2-round attack where we generate bunch of impossible state from $\alpha$ through second round resulting the list of impossible state.&lt;/p&gt;
+&lt;p&gt;Then, we guess another one byte of $RK_3$ denoted by $GK_3$, inverse pair of ciphertext $(c_1, c_2)$ in the third round through $MC^{-1}$, $ARK$, $SR^{-1}$, $SB^{-1}$ independently and create differential from those pair denoted by $\beta$. Compare $\beta$ with the impossible state, if $\beta$ exist in one of the impossible state, we add $GK_3$ to the list of impossible key. &lt;/p&gt;
+&lt;p&gt;We can determine whether $GK_0$ is the correct guess or not by looking at the number of $GK_3$ that added to the impossible keys. If in any byte position, impossible keys contain all possible bytes, then $GK_0$ is incorrect, otherwise $GK_0$ is correct.&lt;/p&gt;
+&lt;p&gt;After impossible keys of all byte position in $RK_3$ discarded, we enumerate the remaining key, apply $MC$ and perform inverse key schedule to reverse $RK_3$ to $RK_0$ and check if the key is correct via trial encryption/decryption.&lt;/p&gt;
+&lt;p&gt;Although the chosen-plaintext required in this attack is the same with the previous attack (~10 $\alpha$), the time complexity in this attack is at least $2^8$ times higher than the previous attack since we guess 2 bytes at a time. Moreover, for each guess of $GK_0$, we need to regenerate the impossible state again. But this attack is still quite fast and running this on my laptop only take less than 5 minutes on average.&lt;/p&gt;
+&lt;h1 id=&quot;conclusion&quot;&gt;&lt;a href=&quot;#conclusion&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;That’s all, we successfully broke 1-round AES until 3-round AES with differential cryptanalysis. We start ourselves looking at the differential property of AES S-Box and then able to exploit those property to recover the key round by round. &lt;/p&gt;
+&lt;p&gt;Although there are many of more sophisticated and more advanced attacks on higher round, AES is still remain secure in full round. &lt;/p&gt;
+&lt;p&gt;Lastly, all python implementation of these attacks can be found &lt;a href=&quot;https://github.com/Merricx/aes-attack&quot; target=&quot;_blank&quot; rel=&quot;nofollow noopener noreferrer&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h1 id=&quot;references&quot;&gt;&lt;a href=&quot;#references&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;References&lt;/h1&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Daemen, J. &amp;#x26; Rijmen, V. (1998). AES Proposal: Rijndael, NIST AES proposal.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Bouillaguet, C., Derbez, P., Dunkelman, O., Keller, N., Rijmen, V., &amp;#x26; Fouque, P.-A. (2010). Low Data Complexity Attacks on AES. Cryptology ePrint Archive, Paper 2010/633. &lt;a href=&quot;https://eprint.iacr.org/2010/633&quot; target=&quot;_blank&quot; rel=&quot;nofollow noopener noreferrer&quot;&gt;https://eprint.iacr.org/2010/633&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+                &lt;div style=&quot;margin-top=55px; font-style: italic;&quot;&gt;You can read it online by &lt;a href=&quot;https://merricx.github.io/adventure-of-aes/&quot;&gt;clicking here&lt;/a&gt;&lt;/div&gt;
+              </content:encoded></item><item><title><![CDATA[Don't Roll Your Own Crypto #1]]></title><description><![CDATA[The series of cryptanalyzing encryption scheme from local academic paper or article. This first series will discuss about cryptanalysis of image encryption based on Chaos function.]]></description><link>https://merricx.github.io/dont-roll-your-own-crypto-1/</link><guid isPermaLink="false">https://merricx.github.io/dont-roll-your-own-crypto-1/</guid><pubDate>Wed, 28 Jul 2021 15:42:00 GMT</pubDate><content:encoded>&lt;h1 id=&quot;introduction&quot;&gt;&lt;a href=&quot;#introduction&quot; aria-hidden class=&quot;anchor&quot;&gt;&lt;svg aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Introduction&lt;/h1&gt;
 &lt;p&gt;This is a series where I will try to reviewing and cryptanalyzing various cryptosystem schemes that proposed in academic journal, paper, and article from Universities in Indonesia.&lt;/p&gt;
 &lt;p&gt;As written in the title, this article tries to emphasize the sentence “Don’t roll your own Crypto”, where we can’t just design or create our own cryptosystem algorithm. We should always use standarized algorithm for Cryptography. &lt;/p&gt;
 &lt;p&gt;There’s absolutely no intention or whatsoever about humiliating the research that discussed here. In fact, this is how the process of proposing a cryptosystem scheme is carried out, where some party proposes an idea, and the other parties will try to find the weaknesses of that idea, until finally from these weaknesses, it can be developed into a better scheme and so on. &lt;/p&gt;
@@ -43,7 +818,7 @@ $$
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 76.35135135135135%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAPCAIAAABr+ngCAAAACXBIWXMAAAsTAAALEwEAmpwYAAACp0lEQVR42m2Se1MSYRTG/QrN9CH6LtV/zTjjaN7A5bYXQGRxEeUiahgXr4SJQ0y3CZrSaDJGTUlNmJQGL6ihIGmKEpVasu5CR5fGqHZ23nnnfd7fPs85Z0tyLJvP51fDY25T+SMr4jTVD/VaPA79W58jf/6MeB7azW0uu9XVb3XZbQO2jmR8A85zuVwJyzKwW5zzuUzCB1bZC3eX+87As3v9S7NPOdhubpfxyjQE0iwTNBEIKa5ejnyAc5ZlAT5zDkz4SbSqr1Pr6DITdUhtWfn4yxEOdvZaKIxvUKJtlNRAYhqZMLoUKYL9/oCcUBEiTIncEJVev3L5klzI5+DBntukuAYwA4m3qnA1Ube6vFgEv5mYrbopkmOUipB0thDCilKv28nBd7vPYH0DCuZ6JdYkFawt/3ZmmDPY5xu7eo3Hq0S1qkarkVLL8OnxQmyHzUSKqoFsV8t1CjGF8y9gaBrsDtLpueC81/PcP/r6lW94emrq8HuGg3d3tpPxzfD74ExgciseS2zGfv44LnSbu0FnT/Z3d2Lrq8nE5lp0Jb7x8ejwkJO+fc2kD1Kftz9tJ7fS+6n0/l42e8JJhZqD05PQUqOKgNqMjVI1Xuf5XbOz10xhPD2JQcE6haRJiqwsFo8KYJWkpqVe3CwXwQrDfOIevIBRnlYhgfMWgAkk+hccmpkCNwN8G7pK4mqM770/xMFDfeDMh0TAg6qRCv4P65WorkEC8SDnH7DlXMKB1ClRjewf+F1gQiGshBlCKpAVgorHroHCnLtMSlEV/Figgq0KrV2JhIvgyHzIalD3mfTdHVpYLQZqdNjLwRDB0qruuaXrbtf2dOhsRk1sPVqAuRsMw9B09vjoKLywkErtMcwpTdOFKdJZeLcSiVAomMl8OT2lWYbhpF9Tb4v39xdTigAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 76.35135135135135%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAPCAIAAABr+ngCAAAACXBIWXMAAAsTAAALEwEAmpwYAAACnUlEQVQoz2WSa1MSYRTH/QjN9B36Hr6uVzXTOPYCFbnswi67ywLLbbkooFgpjVqSCZY6Y1njtcuMTBOIQaKmASY1UynS1JBBGEWy0IFFEzuz++wzzzm/c/Y5/9PAccVyuRwPz4/YBV5H6/SwbdztnvH2RhbvlKs21NtFtDUZCTFLSAyEWIMIYhvrcM5xXAO8sAst+awqsWfAOTHiNlA0Q9KRZT8Pe2+69Liok8EdetLG4CyFxN+8roN9vgCGkBSKMkiT+NL5c2fPKJF2HvYM9jIyYacG62QUNq1CrxBtRTfr4ID/lQylVaRJg0l7WKzl4gXPoOtfZUxo0xJ2eHSESYlux47gYrECzy/4GhubBc1SLUk5zUq1TPL8ySMeHrhqx1suG3ChmUK08lZKdCW2sVaDS6US7HZ2k7Nzi6Oeibnp6YWZqafzc19Sn3h4Ox5dDQeDL3y+Z4/XV5bXwsHs9304B7Ch+qkE/crn3iXeJnd3YtHoXnKXv06lQvGwxHHpdDr1OXVYtVKp5qrdeSMS7jLQ/d0Wl93U77Q4WfXs/XE+YtLrtuuoPrvRZTdes2q7japEPFrXsJVlPyNrZSmpkZSAGGpEAMxRt69r5W1mGoVzWKHbp3VeDS0ZCQmI2VGVxKAQTY3VhmT0lsugEHdoFFY1Bt6Kzpv1OkdCSwCAz6qSd2hwHdb+4O7wkVR9erzdqsYtKjnwLCmNb9ZXjrwMaDGhmZZBYotKxsjbJkdvn4SBNCtRWOEHT8NroSCkdOjIHlbt0FMQ8XBshIfvDd2ARnSzdJdBCaNiotGt4/HkIwqF39nM/rf015VwaOfjh1w28/Mgx7sOcj9A2PeJ7WDAn9pLgutPoVCTqnzCIFkmkwUly/9ZPp/P5XLH4vP2FzUBl+7GsUYWAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -85,7 +860,7 @@ $$
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 58.10810810810811%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAIAAADtbgqsAAAACXBIWXMAAAsTAAALEwEAmpwYAAABp0lEQVR42pVRTUvDQBDtv/PgL9CbUKsIikoxVYk0JkUQqR686aUIinpQwY8olVZNrbbVkyA2lxLaYD6bNts0ralxdDEkIoKP7GbYeW9n3k7IdV2hXDjfTqQPd+7S+22kw4n7/u66+P8ZlJ+f9lIbBzupo92tFjK98xCsfPZ0lRxepcllkmgaiuP0ZFk2TbPZbNq2DYTsxcl0eHB+IkxOjeiaGhCn09eRobFoZHCgv0+oVNq2Lb2+gl5VVbhCkuVL9hiU8ehYYnbS0LWAOJPJj0aiyaXFzfWkhRpeDtDr9WC/z11RM+NriYUVas6o6wFx9+1NUVRJkjRNc7+B03hvtVp8+QUhk+d5x3E8Tsj1AeqIoigIgqIojUajXq9D26CEzmuiCFl4BX9fIa8ORrfbNQwD3AIVYqgDQafdVqtViGu1mr9YoDJGp9NBCHk3QiBXqyWWLRULZyxrWVbAs9+nruvgHNoGPfAw6YbjogRBkiRDM+DldzEATKIvwIShbUzK5W5jsRhFUTRN/yX+ATyqHMcRRIyKUwzD/EOMSeClWCw+PD7C5x/VBx8OhVkNSWO2AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 58.10810810810811%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAIAAADtbgqsAAAACXBIWXMAAAsTAAALEwEAmpwYAAABhklEQVQoz5WQ60vCUBjG/Qv7BwwiiCjWhYjaUhdkISSBqIuiErGrWwUGfqkECQpJIQLJb6ngdLqt4aZzXrfemi3z8qHnwznbed/feZ/nmFRV1TTtLR6+DTrvQuTrU1jttLQe6Q3xxwfq+Oj6zH8fDhklk167udj32uccFtTn3gZYqdc5jq18q9lsdjqdc9/e8rQZRSZdW7Z+OOAPIlOziHkMmRiXZVmSpGKxyLKsIAgVSSoUGDJwaJ2fwpdmdp32AThwtYCsuhzrl6c+7a+61siTTWxxZ2PtwO38hfVNrtVYlmNLJZhpAL3wB89nMxlRLKfT7/2woUajkc/nc7kcGBaht1yG2BAkR9O8IMBFiqIMgfUJ7XYbeIZhAIBveC1YoSCLosTz8MtxnNFsGpoQzAPTe5JNpV4ikVgsFo1GR9qGu4UfVatVcKGfkxS1gmJWi4UgiJEwDISxEAyiwtpqtfTJFEVhKGbDbR6PZyQ8qC5MfsE4jhOE998wnaef4/FEIpFMJo3SJ8nEheLM5TteAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -423,7 +1198,7 @@ keystream: [5, 13, 12, 12, 14, 5, 4, 0, 8, 0, 5, 8, 10, 0, 2, 11, 9, 0, 9, 7, 15
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 39.189189189189186%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAICAYAAAD5nd/tAAAACXBIWXMAAAsTAAALEwEAmpwYAAABTklEQVR42n2Qy07EMAxF+wuIoemLNkmbtNN2+mTQwPCQeCzYwYol//8Vl9hlYIQEi6N77ViOba9+aPD0/oj+ucfN6x7m1uJsEBBjsDCFCMYQiYPy/hCw/oXXUaO3Par7EtuXGXqfQ+4k8muN9DJFvMswXxl83M04GXz47pP/8FbnAqeJDyEjR4hQxYh0whpwLmKfqIT9IffbH/CyTMGYEnlhURjLXqocZ777UYQM+dVR/JNfVASueRAzXpJmUHkOpRckKcV5gUxphmKp3Qmk+s4teapRCKIYIopYPSoq12sU1qJqava2rFDV9TJxWaJa1zDWbWEMvxFUXzcNv4WxO0f41ZAKx3nCpu1ghURbtximEZuuRz8M2PQ9hnFkP80zeufbrsPFdstvvmt0aEbqVk6hi8Ldza0RZ5ByWeVwAu08TUmelGI6iy4Mx8fTEZ/ZduBOuUBEnQAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 39.189189189189186%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAICAYAAAD5nd/tAAAACXBIWXMAAAsSAAALEgHS3X78AAABVklEQVQoz31Qy07DMBDMNyCSOO/Yie04IWnSlKoShRYJOHDjwIEP4P8/YVi7kFYIcRjNzng1u2tP3FV4+XhG/zRg/7aHORr4Y4hgYg7hFBEYUuJgZO7tP3j60ODx/Qj9oLB93UDeSxS7AhUNyrc5MqqbncDn4RaMgv3pPOwveH7OcJX6CMuYEIHxBLFIEREz58WuzkS26B/81hZelpWQUqOqJWpiWwtRww/oxPAEW18HbNGXvuWQUThLHLwky8GrGqWoiKuFRW09gYKLb18gLzlp7ryTXzuOkhRhRKExBaZ5Dm0Mbaeguxa6baF0g4a4VgpSaTSmhdR0hZSOVdO4ftN2MF2HJM3OgXbKtF5jWK2gIo5WGYzzGv0wYDWO6Mkfp8nV0zxjpN6bfsC82TjfbhewyIXZUC+mdHsep1PLpEBZ8EXbU+1Au5Vjdfpr+y22x256uZ3FF8PV4FIlVwxrAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -456,7 +1231,7 @@ keystream: [5, 13, 12, 12, 14, 5, 4, 0, 8, 0, 5, 8, 10, 0, 2, 11, 9, 0, 9, 7, 15
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 50.67567567567568%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAA3UlEQVR42p1Syw7CIBD0/z/LGGuiZzV6s60HH23tAygUxgWrVm0juslkA8wOswsjdMIY85KHwp4PcUdDRCklGGMQQoAz7rJbc/GfIOMc680WYRwjy3OHU5K4/OD6CKIVNU0DlRdoyhIQNUDOLAy5tWdd7leHlqIrhmy2QDKb4zgJcBhPcQ7mSGlPF+XDnZ9DK0gzk7sIKtrjstogW64hw5j2Qmjr0lfwDk2oqLBsi22kHDhUQN2gbddnhh1hpZSD1hqGUCsDJukybX54lJ5WnusbvL/NO+FT+IY+7j2u3GgUEIqIkD0AAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 50.67567567567568%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAA5ElEQVQoz5WSW4vCMBCF/f//SnZBF30QZBHxsrL44qW2RdOk20w/k9RC13sHDjMkJycnM+nQiLIs/+VH4fcfcTv3iB7WWowx5HmO1ibUWuuQWwv6UFnGZDrld70mTlKSNGUfRSFfX/5UkJoognXOxDnkso5bc9bDXpP7+sm+dg7jryGH/oDtR49N95OoNyDuD5HjqeK0ERTft/kPZrkiGX8Tj8aYxQo9WyIqayNYZXFQbggq09RHEgM7Bbnl8tw3htJ0WhRFgISeCaYo0X/uB0ijNW0Eb6df4e1vc024Fa5wj1vHGfoHFAWKnlRGAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -488,7 +1263,7 @@ keystream: [5, 13, 12, 12, 14, 5, 4, 0, 8, 0, 5, 8, 10, 0, 2, 11, 9, 0, 9, 7, 15
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 70.27027027027026%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAAAsTAAALEwEAmpwYAAABbklEQVR42o2S2XLCMAxF+/9/xTsvbVPaEmCSgJOULJRmcTb7VnJZXEohmtHIY8vXR5IfQKa1Ns42DAM838dyuYIQIYJgjSiK4fsB0jSDUgp936Prul/3jvHhmmAYRUZksxGI4tis2UUYIgwjc15W1XjBJE2RZhmSJMU2SYzzuiKRtm0hm8bk2UK3BUmAifI8R13XRoi9KAryEmVZ0r68LWhHvsxCUkp6QOHSuH9MeleQG84mhMB0OsVkMsFq4QG9gpY1QKVqGojjOHDn83GENiWXvN8XaErqHZWriJjwDH1D4rg1FFvQ7idT6wM9l6kOZ5cAowSrokZfE0nXGrKOqPgPXsu9K8g7A11uqMyWhBqi42GYvJ/kcYL/mRmY/eA9weNGy00nmoqoOLKXUp7JLNNjPrbMciTPM3w8vSBxXrF1ZogfHTT+Gn0Yn11EUPTJ7fKvE+52+Hp3UbhLiotT/HxzUXvByauVhzbf/Zn2N1oDRaI5fju5AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 70.27027027027026%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAAAsSAAALEgHS3X78AAABcUlEQVQ4y42TW3OCMBCF/f//yj771KIW6w0VQgXRCgTCJae7QafUUmFnzgTD7ufZbBiBQmttxFFVFbaOg+VqjYPrYrfbQwgBx9khCEOTV5YliqL4VXdfR11ABgjh43BwIXzfPLNcz4PnCaMkSYYD2Ul4OiEIQhyDwCggpWkKpRSyPDd5bdBzIBWzo1MUQUppQKzrNUYcx8Yd7z8FtlcullmGjFRVNR6Dz4+d9gLruin26KwmkwnGL2OsPjZAWUMTXFOrmgZiWRYWtj3MYdtlRC1/XWLkiYSiVmuCkj1Iepfz87OhtIE/51kb1/rmntusb+8eDQwCpuSsTHNypYyzgoB8B7tye4G8U1Ext6bo7HKC8TBMXpM8DPhfmIG1/7APeN9Q5CKjFlNyJckVK+EBdIQecrGz6IyjNYP/NsVxOjcSrxYyZ4+CLnujTxSuQEWTb7ff/aWcL5DzBaS9RPp+W+l3PLOh1g5p26zLDcro8mfa3zNARaAiUxbEAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -524,7 +1299,7 @@ In this challenge, cookie is used in the form of JSON Web Token (JWT) to store t
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 125.67567567567568%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAZCAYAAAAxFw7TAAAACXBIWXMAAA7DAAAOwwHHb6hkAAADNElEQVR42qWUyY4URxCG8yVsmTfgYgn5YMtIfgM/FByRJVuyLfnGK3DGByQLfLOAWXBPd83SSy1dmbV2ZVZVZi2/I5PuGQ9MAxpK/XUulcsfURHBJssMT18c4MXrUzw/uMAyH7DI+ivyLdRfUrsqiPx9/HLE8WQG9vVPHD/8UeLHxznu/Zzg+99SIsG3v6b4jrBz3/yS4P7vKe4+EvjyAcedhxxfbbnjiPHFA4HHf/4L9veE48lfb/Ds1QJP/5nj2UGIEz7gODJEd8W6wxG1h6G5kaOox8ujEzBZJJi+OUQuIsTBAsnaBzDiNs86CsFiLnBweIyTqeewfT+I3JH9MH4U+l1eX1UVWJqmCIIAQgjkeY6yLJFl+V4V4zheQ2vt9ti9nHOwoihQ1zVkJaGo7fuB6N3CdzHGoOt6otvSu8utGHsYJ2uZ7/uYzWbwPM9h+7vxbOZdzk+nU6xWK0gpsdlsiMphx0opJ8qqZPZPSeXst1h1exkGDB/AWseESBBEkTPXmrSP7v9jvWcdzTPrg8YrINcKK6EQcGpjiYuwwjyqECUKi7XEkuZ43rh+lNQIxdt5u9bn0vUFvWe6bbCpBpzFBn7SwI8VbVaY0wUhbfRFjYtIOlpNH6QfHdoMl5iO2i3M0IFpM+KccjUuDU4jhfNQ4iwghXTrOm1QSPPJwc2MbiDkiJno4GcdqerAZQ+eNWRi62JtF3/DOzF4E05hVo+Y0IGct8BSflTF7pK9ClM14pSULYShfKQLNhoxKbQ+TMrWYdUG5M+67a9lzPsHWh+SQj/TkHpAS8nZmt59gIbYOd6O7WE2f68OvEGh3prskcki1YgobHYqPjWfr/mwMy3IOsyp6tZBjaHub1m8tgrLsqAg3eDcTxAnOXpKemNuD+M8QU4lLE8TVzk0pU/bbtFb2utz+gMwKSsoPaLSgGlrctCAz3lY29QoyG9zTim2IrMzhZhCxGaIC5mideGzw4aTjYJ9H4c1TeNeRqnNWQXPr3BKTOala2erDdJSY6MMSkpBWVNh7fdbwWxZolxHSIo82mzz+CJ8WwzOAiK01aTGmpRVdedUClId0Xo7b3FFhFo79x+Lm3KJ8iB2UQAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 125.67567567567568%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAZCAYAAAAxFw7TAAAACXBIWXMAAA7DAAAOwwHHb6hkAAADQ0lEQVQ4y52VS4/cRBDH+2sgIfgEnII4gAhfgc8EHJECEpADB7gicciBC1IkRFCk5QJZBMnOeDKz64zH72f71d22/1T1PDaJGGa1ln7T7bb776rqqhqxiXL8dvYHnjxd4PxihaKbULQjjVvKHbxW9SNqNb3GCEnrjQZmzgLizr0IH90v8PF3Ge7ci3H3fo4Pv07x/lcpPiDe/SLBe18muPtNinc+j/HmpxHe+uxV3ibe+CTBtz8/g/jpzwjfP7zAg99d/PDYxY9nHh5fGjx6riy/7ni0VPhlofBw3hPqJfotjsHZkxlEV6Vw/jlHEW+QbFzkkQdgwm2uwPcgwijG+V9/YzZ3cDFz7NzzQytpxgnDKabrz0spIdI0heu6pB4gjhPwfUQfmfhF+jmF1hp1XaOqKgRBAFEUBfq+R9u2dtxfwzAcYdwxYBxH5HlOBkQkFsL3fQjP8+A4zoH5fL7DOcDrs9nMesJusTV7pKythWwQeyeyLIOsJMqiREEopaDIDaV2vDTXxlDcxmt2lu4x9Fxw3DZhiIa+YGjzwJuYYYe5xuxHes+YV5/tn9OhZGicDG1Qw0sabOIGXlTjKpBwiSBtsQ5ruxbn3WHNp3df0Po62sJzXhd916EuRywDBTfuaHODK2Ll04sxiUUtlpsaC0+i6Qb0eqQwjGj74UCnaFTbuVB9h4wOd5kNiEqNJQlZNmxlQ5a0yCp142S3gkkzYR4brHMiMfBLY4X8tLPJu8+58QZ5aQXzdsIzEgwjMtVtTlrBG//XwowE58mAq1gj9FoUUiEpe4RZZ91l+D4gizlee9H/Ej4IrjNN/Y4CS8XJm5rOQLbmEHi+rxrOxfG0ILu8IJfjQiGk2LHAKZePxlCrHjmFbpVTN1630NJgxO0vIblLZA2lSY44KTHaEtqW0W0Q3KqSmKCOkSQpdRxNqJMcav01hJQVOj2B4k81Sr5PN3P4WOKInppC3gxYRR0u1zHVa4OU06Sg2FL6MJw+Yb4lpvVeD0cPR3RUy/b/gDat/IZqlup2LfH0srT167yQiOjUCqltPnLqmOG4F0JrRSUF6jQtZm4Fh8See1t4zoLcJFiUc5GTm63ksvS4eRAb2ruf/wu5pnJ1JKF9fAAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -556,7 +1331,7 @@ In this challenge, cookie is used in the form of JSON Web Token (JWT) to store t
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 65.54054054054055%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAYAAACpUE5eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABbUlEQVR42o2TC2+CMBSF/f//b9mWOBM3mYIEgT7o47Znt0URx9SRfJQWenrug5UxBsVhj1b2IMRMBDLzq65rFLsdhmGAcw5ElNdjjDesYgigqkMse2DPlAKoJI8SltecMnmjVhpKqyzmvV8ITYKBBY+tx/eRUJQeReVRVQTTEBrhoXxINoDA9CwuDe5dWZD4tjEBr5oZxrGmiBMLuNmHllPjGLCBe+7GkGeTcGZ25PTOOQ/vOMPJcHgiiBgX1i9Mcw49cATR8Jp/EPK0+Z7Q+fkkJD7rBpKrbKyFMRbWXkndkuqx+i2wdDqG3qoBb43CRyOxPUn0fIBgpBwRQuTqPxc851IMBh+SsFGELw77IDS6tuVW4nZSKoum3vy3w04brKXHYSDsuSuO2mZXWeyR4IKZw3fuyxdBWOuIXafQtqfs8BL2QvDPyuHqcKsJtWV3Lo4O+34KN3GTw2codlhy3hIpf7XU/DuqLHghOfwBZaL8i2fimCsAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 65.54054054054055%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAYAAACpUE5eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABa0lEQVQ4y42TaY+CMBiE/f8/bz+4iUY3m6wiiECh9zX7lirBg3WbTC/ow7RTVtoYFOUJjPfwiKMiMGoqNGiaBkVRQCsF5xy89/lRjHdahRBgyxbhxICyB6oBqAVw5jDUt0KPCznn6PkAYy0s6RF0B6xbi2PlcSgsDieLqnRQtUPDLIQN2aKndiA411gqGUjVXgV8ShK1a2prH9GGCDt70ZErrzSiz4ey6DBVuOo2OfvkNKe1gTUOkYxG/wZ4B3k46Ns4uAAnHYKmeffHlqfFC6DcjxSIwKXryKUmuIWh22GvASWlccpj9Qh4dpq33gqFD0p/03B8tylxPiY/V7pO74HXs+QUyI47bElfFFzRSzDWQUgJIcQITHfz30AmNfbC42wCKhPRSIOh7zPsCnzp8FkZOJDDzeCwJu3I4Q8TYF12uLjll8nNHG5FwJFSPhqgEMkhm7b7BHwnQQ7LQdEfqVCRLlxCEkzMlM7wF4or/JjBpW46AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -673,7 +1448,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
 &lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;~$ python solve_elliptic.py
 &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;+&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; Private key: &lt;span class=&quot;token number&quot;&gt;76360441104529975103479885636071599682318869381694694853301440181334888705951&lt;/span&gt;
 &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;+&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; Forged signature: &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;66378196147239170843827166360250592759597163597715304772573917957470106804741&lt;/span&gt;, &lt;span class=&quot;token number&quot;&gt;106147551365476994967159598162752611693743616349309630180573719192813726918650&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;+&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; JWT: eyJhbGciOiAiRVMyNTYiLCAidHlwIjogIkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIn0&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;.ksC6RjVxDXfXips96dGXrpC0DoB87qpDSrBrBgn14gXqrWKQDWejXdEUJmwIoIVIcIrt8IuDGIRzZbPzbIjn-g&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;+&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; JWT: &lt;span class=&quot;token assign-left variable&quot;&gt;eyJhbGciOiAiRVMyNTYiLCAidHlwIjogIkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIn0&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;.ksC6RjVxDXfXips96dGXrpC0DoB87qpDSrBrBgn14gXqrWKQDWejXdEUJmwIoIVIcIrt8IuDGIRzZbPzbIjn-g&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Insert the resulting JWT as a cookie and we got the flag :D&lt;/p&gt;
 &lt;p&gt;
   &lt;a
@@ -690,7 +1465,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 70.27027027027026%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAAAsTAAALEwEAmpwYAAABdUlEQVR42pVS2ZaCMAz1/3/LZx90NsUFWRS1gBsFSil3kjLOcXTccs49KSG5vUnaAVnTNBZsuq7heT4838fMdeH7AfwgsN+MxWKBkHA8Hv/UnXznkrAmwjhJkKYp4jghxBAEPud5DqUUyrK0eedEdwmFEIiiCAmRMomU0oJVWWSZjd8lPPeczCoYxrSxc6uqClprKnhAaIyxPgxD9Ho9dLtduFMPNdUWZUMXUAfaYNDvw3GctqYx9xWeztyaEBvsdntSXFHLiuZnYCoN+UrL56SsWOua5tqQNyiL8vffpYCnCIuioHkxGSyKXLWz+yf3ISGDN86LUapFpas2z27jSYW3rGmuL3zqYatKIS9yZDKD5DeYS/vQOc7KeKsvEcpMQqwF1qsNkjhFSpi7HrTSN5Q/INwWe3xEIzhihpGYYriZYJy4hLn1/mGJRbaGf4xwUNnVtq8IE7nFYPmFz5Vjid+j4Y8f4Y3i49iFuw0woQtSyr2s/wZbckUAOuJRpgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 70.27027027027026%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAAAsSAAALEgHS3X78AAABd0lEQVQ4y5VT2W6DMBDM//9W+hopRW0aUhquJoQzhBuDPV0bpaI56UqjNdbuePZgBjIhhIK0vu9h2w5sx8HWtMi7cFxXfUt873YKWZ7/yTv72S3COI6RJAmiKCZECAnyXFUV2rZF0zQqbkz0kDAMI3ieR8SJIinLUiEnVQMKlHT/kHDsJYlUIdVwPtyNres6BYgnhJxz5XfUo8VigfnLHKZhoafcuhH0iADvODRNg65vhpxnCs/nLMsQBAHS44kUMyq5JcUcnPUoilxVMankMalU3HU99VWQ52jq5lfRpYBJhHVdgzFJBoW6aofe3Yh9SighJz4MZwBjbIhT05io8J4Jcf3gpMVuSUVFpRZy9+QOEiJadLlCUhkX/H+EZVEi9EP4hwBxSH9MfIRl2mANu6P8CWFan/DubfAZmtgEW+jBF4zIghEPcLI99oUPN/eQtfnVtK8IkzrF8rDCW6BD89d4PXwor5Ffeiusky2M1IZ+NBFT7GX+D18ARPkSr8iYAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -725,7 +1500,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 75.67567567567568%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAPCAIAAABr+ngCAAAACXBIWXMAABYlAAAWJQFJUiTwAAACoUlEQVR42m1TWU8TURSen+Nv8dEYoxJj4haiL/pC4psxPqJiAykBIkgC4oMPPigFi7aKMTEIZRPLtLN09uXOdu+dpdOZeqZFE4jf3EzuMud83znfHabb7a4sL1deLtSXVqaeTzRZtt/vh2EYDVDM4yT2g8hzi60wJJRmWd4fgCFZVn9aUm/f96/fezNy4/tuY7+xW6/Xa7Xa5uamZZoBISmlcRDQMAop9X0/y7KT4CjPv5Tn0N0x/+ro/LWb24eHe9uN9crax7X1b1+LYEKIj7GmqchSCKEYB55fIE1TJonj8enJ5fJU+fGj0bEHv34feRGRTM2grrHaoAdykvccx1VVxUUakEMujGEEwM+EuvPh2eL70lJ15m219FqsbEU7UrDFk58C+cHTHTEMKHIQx4ssL7GcyB43OXZfVfUkSRh5fLV5fkK49ap9scyPzB1fKh9dmGxenm5emT6+s7B37qFVO8RZrCmKZWqu51mW6bv2Sc2oesC9WBUX662pCj9TFRY+i/M1YWZDnP0kzG4IT975rOaHRJY6liGDC5SQICDQ+DzPGbCqo8htHnQJNrJ101ANXTN0C+aWaXsoiiPHcbh2SxQ7rVbx5lpHuq6laY+Jo0iWJNu24NFU1TKtwgkwMs+LkeXABk2y4LwYpo2QqcsY+70eBMcxz/MIIZAAYmCZnwZs2shpN/cMXYV4Q9chXjcM2C+CBUEAYdkA8PW/yRBwscAb21Sw72EwmoYYisbB4JJEUafT4TjOtm0dStGgrwpI7RfCT5hdx9E0XRBFCfphFp4jS066acEsiqLruqAcvjtDO2T2PB+yYozhVg1Ngn1YFsxACLQQPzw7UzOoAAJKyamUg5+DqVarIJtlWWDO/wcahpAU5KS9FJb9v4Bu/wE21iVU6uiJGAAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 75.67567567567568%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAPCAIAAABr+ngCAAAACXBIWXMAABYlAAAWJQFJUiTwAAACoklEQVQoz2VT2W7TQBT13/ArvCKEhCgPbAKBQIgXXqj4AkRRiUgqWqmoQEVZ1Ae6pCkUGsoTaquktI1Tx+N1bI93j7fEdrhJCqJwPRrN2Pecu5xrptfrvV1YqM692nz3oVIqtVi23++nadodGpyjJEn8IPW8OEniOA7DKM+L/tCYsMg3Jiala3edS7fnxy5/39352WzW6/XN+ubWty2TkICGXRoCPhwgQ8/z8jw/BidFsTU1Y9+6H47dnLt49Uej2dzerS6vrq1UgcLQdRpQn1KsYdvElIZB4Hvw+H4vy5humj6ulN48nXz+cPzGvTt7h/tuHCAsq76Jl7ajPTktMsd2sKq4lhrFCQSnsGiQ5TkT2/7H0svFqfnVF4vL5dfoy06XNei+Eh3iaFeKDnAcRpZtcbxwhOR2R2izLY5tyooKrWCUJ9WD0xPoymznbBldmGmfKx+cKbXOV2C1r882Tj0gn/aCPNUU1dCx7biGrrkOOa7Zqjb4R0vC7FducoV/toamPwvTG6hcEyrraGodjb9392U/DhVJIrocx0kURgEFBdIBGPQQFemI43jEm5al6bqKB2YQgnXN9Jw4TW3b5jgOCQLHHQmC2OEOMVZBYwa0k0XJJCaooqmYGCTrZf28KEYry6NooBAxLULAhViWZWgSDfxBw6BunufhFQwGOEVRVJw0mA3TsrlWQ8OKYRANY2LamqaD5wCMEHIcB2oA19F+AhzHfkBNQw4Db0geUxCL0uGQJIkoip1OB4JrGvBiWZbB5Q8LNAmoMdYQEiRFw7otK5JpiEnaZYAYIkNLAAxn8M4yKCf/OzKMJNBSSuFT/7e5rsvAHQICN1xGf8I/mUOekB0g/ylqkHatVhMEgWVZiPx/wWBQJqgCucA+wowMrr8AIEUl8Zedo+EAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -758,7 +1533,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 46.621621621621614%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAJCAYAAAAywQxIAAAACXBIWXMAAAsTAAALEwEAmpwYAAACXklEQVR42jWS2U9TURDG+1f57oNGjWvik09i4gOJsrggRTEsFQoW0rCICdiIwQoKChS0oCRFCQItIGtZqm2hBdrbe3tP21sWY36eYnz4Mjkn830z882Y7s1mKPIZmOez5E9nuD2TodD7D8VrcH8dHiweUbH6B/MGlEqUSM5dn8z1GuRPZbg1ncs3jrmm0W0Dd1AwGkjgCmfZUnRSQqBqSTYbnzJZa8c95uFNby8+m03+NaBrGjuqoG4xjc1vYFkxKPGlGAunML3wC8zyUT6XpmLB4FdcRxMpYgmNqXOX6D5xhnZLPR0WC66Tp/l66jxqQiWSPuK5ewpPnY0JayNNLe2MR9KYGqa2qJ8I0rygUjih4I+lELLDHUXD2dZFt7WFIdcwI0PDOB091FXbiUZ32TF+0/XZi3KzgOTVPF5a7XiiUrDTr/NuQ6MvuI95Lsvqno7QBbGkwPGqk35HB66REd5/6KfGbqeqpgYlkWBPCrYOjjFYVcHrgiKampv5HpEjO9d1nIEMPcEDrEtZNmI6em5kNUlH3g0GikvoG3DxyFyG4/IVOlueEZf+RpIG5Z4gTV+8OL7NY/Ws8SkkBfc0wXZCEEno7Ko6CU1CTxGXHi5fvMDHs9coq6zlSVUVbdfzaLU1Eo3FZa7g4eIhbesHvN0U3Jk/ZDQkMKlJuQQJVY74DzqKjIoUDs34CM4t8WNpFf9GgJXwNpuhLelxirAieOxVqZxNUr18QOmcQV9AdqhoOfJ/yO5ygsdRihv7aEYWkTZIpjLSirS8gPRx0dzZDP/UGQ/rTMpluENpZqKCvzCMVanSo5ScAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 46.621621621621614%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAJCAYAAAAywQxIAAAACXBIWXMAAAsSAAALEgHS3X78AAACQklEQVQoz1WRbU+ScRTG+U697EVbLesDaH0Ae9HWi2ZrvvAJKResEm2lljLIp6ZJ0xADZM4eGMs0hXJIGpJTCLjhfoRb1LZff6S2enHtnP/DdZ3rnGN5s1fBv6sS2Ckym67wLa+SkzUOJIXE+CRRzzRLKxt4g2FWxTkx/oJsUWG3oOLYNHFsn2BLHtMaOySY1rCMbRvYYmV64gb2ryZ7koqq6RQFabXhMi/PXODZXQdD3Vb8Z88RPX8JtSSTNY4YCH8mMOQiOOimzz3FuwMDS+/Hfe5FfuCMydyMSGzldTRNIyvJeB+5mbL24pt9TcjnY/qxh/6OB2SzOTKVEyYXV5Cab2BcbWbM4WT5QMfiSchMJiS8qTLt6xUSOQ1NVSkoOq7R57xyjTAfCuHzL+D0uOm228nnC+SE4OD8MosdHXivXafP2U80IwRHkxoT3ytMpI/pildJ5lThUCcnWna13GKhy8bM7Bydbe08bbzC6MAQkqyQUU16lhIMzC8xHFjmYeAT4T3Rcm1mKTHgtMBuQRGfVYqqTkEIrjVcZP5iEzZ7L3esVoYbm3jiuE8mL/GzpNEaP2Jkp4o/XeZ2/Fd9KbKi8ReKqlFSVCSR14RTgSDJ0FveR1dYW48R+bLJxmbidGk1I90bOp3rBm0xk5a1CnMp0XKNWEddpKiof6IoUj1GqR5hmIdoZRPdMFGNymnRjHA4syURTpWIZE18wuWHfeGwRizKdVe1+G8uFWUBhULpf5y+C9GSiAVhJF+qj0oRd78BtoNgSMxJZqMAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -790,7 +1565,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 31.756756756756754%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAGCAYAAADDl76dAAAACXBIWXMAAAsTAAALEwEAmpwYAAABA0lEQVR42p2Py26DMBBF+f+f6b7ddNEuUqkJaUQSILxfCqlpeBYkzKmBH4h6paO59tyxxtqbGaJbLh+GhRGknBTP7xueXl7RbZ96AtFLimF6CO3kRWRRQJrEBJ6La1u4F5vz0cBRXuRXVk08Im17dtTwkYvjYBxPxHFMnCT0/UA/DAwKOU2MUiLltDD7cZRrXe5XVAwtbwZ+u5au62jaVgXHhf9oUi9q5zAjiUI83ye/5kRRhK98EATY9oUoVD3PW5i3z9IUfbfjc7vDNE32e52vw0F5a/1y8tPQVCX3e0mrNqzrmrIsEUIgioK6qpZzpercmzO3W06aZRSqL8T3Umdm/QFAEMccFN6fEQAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 31.756756756756754%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAGCAYAAADDl76dAAAACXBIWXMAAAsSAAALEgHS3X78AAAA9ElEQVQY052QXUvDMBiF8/9/jdde6d0ExcrQrUnX5qufSdaOrbMXa49JCoJXigceOCRvnpCQR1rihUls9gXeZIut5/4pwd3DBs+Zhr0B1XhD/bmgvs6/Qj5ygUpyVFpBCQ6RZ0h379gmrzhQitPRYc2Cv4QkjCNjFHlRYLdPwTmHVBrn8yVyGcc4OM8z5mVZCT3ys/stEOVOsF0H5xystZimKfKfLN5IivaI3ss6Lx2GAaYzsdd1DaU1jDFomiauhQsDlKYehtLvM8Z8pxBSrk/OGwfTNlHQ9308EHqgLKsoCsKAMTbOCP8tqRcqpSCl+J4N+QKpkcYnJZDrOgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -823,7 +1598,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 100%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAC4jAAAuIwF4pT92AAACLklEQVR42qWUz2v5cRzHnRxclItyn/xIcnFBUsRBmuy8RbkgIgdlSVN+tNnv2dZsFKXERZSkRAnNHyAubttxJ26e397vetcu39n41Kv37dHz+Xo+Py/O1dUVdp3Ly0s62WwW9/f3ODw8BGcfIJvz83OUSiVIpdLdgUzd9fU1EokERqMRNBrNfgoJkFiNx+OYTCYwGo27Ab+rSyaTuLi4QKfTgUgk2s8yeV9eXhAMBuF0OuH3+/8OZOpubm5wdnaGh4cHvL+/YzqdIp/P7wZkNQkEAuBwOHC73Vgul2g0Grvv8Pb2FoPBAAqFAl6vF6enp+Dz+b8Hfi9xLpeD3W7HbDajVonCdrtN1XL+GgIp8evrK8rlMjKZDJrNJk13sVig2+3+zTJRR0Lw+XywWq0QCoWQyWQwm80Ih8NQq9Xbgcwqmbu7Owo7Pj6GRCKhFmOxGH2LxSI8Hs/vgOQl5X1+fkY0GoVYLKYgsjsej0eBRHm/3/8ZyJQxIDkAWq2WJjoej9Hr9WAymfD09ITPz0/I5fLtQLY7lixRc3R0hOFwiEKhAJ1Oh/V6ja+vL1gslv8DGYz9FalUCg6HA61WCzabjYah1+upQpVKhYODA+pgq0ICI/UgYaxWK3x8fNBfrVqt4vHxEZvNBpFIhF6bH88XuybpdBpvb28UGgqFMJ/PaZlrtRoEAgE9qicnJyCfUqn8WSErMUmQy+XS/RFrlUqFVsTlctE+kgNbr9dhMBjwD2W2CHOK1eDxAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 100%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAC4jAAAuIwF4pT92AAACHklEQVQ4y6WUT2iBcRjH31yVUg5ycXGZxkEuLmMrymEp2UnZkoNI5LCkpEzJzP8/qVFCyUnWSmmtlBQHKTcObg6uO6ydvuv51VtOmL319L6nT98/z/Ny2WwW504mk2GTTqdRLpdhs9nA/QfITyqVQrPZxOXl5flAXl0ul8PT0xMmkwn0ev3/FBKwVCohGo0yoNlsPg+4ry6RSLDvz89PyOXy/1mm9+vrKwKBAB4eHuDxeP4O3FcXj8dZu/P5HLPZDI1G4zwgrQllFwwGwXEcXC4XNpsN3t/fz8+wUChgNBpBrVbD7XYjFotBLBafDtxf4kqlAqvViuVyicViwRQOBgOmlvtrCbTE9Xod7XYbyWQSw+EQMpkMq9UKHx8ff7PMn5jP54PFYoFUKoVSqYTRaMTj4yN0Ot1xIG+Vplgswu/34/7+noHIIi21QCBArVZjWXKnWn15eUG1WkUkEoFCoUA4HIbT6YRIJGJgWiO6Fu4UdTyw1Wrh5uaG2ZtOp6xlspvP57HdbqHRaI4D+eyo2bu7O6aGGiY1VMzV1RV+fn7w/f19+JZ5GH8Vz8/PrIh+v4/b21uoVCoGMxgMTBnFQL+wowp5mNfrxdfXF3a7HTuzbrfLroWeUCiE8XiM6+vrwwoJRrtGDVKGlN16vWbAt7c3SCQSptRutzOwVqs9rJAg9DehdoVCIcvv4uICnU6HKXY4HCw3OrterweTyYRfsaQJVO+xb/oAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -856,7 +1631,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 68.24324324324324%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAAAsTAAALEwEAmpwYAAABlklEQVR42p1TTW+CQBTk3ze99ND/0XsvjT0CVaMxtVULyreLuGq1EQWcvreKWqP92mQyCzzmzZsFrdPpIkkSDIdDgoAQMYIggN3vYzBwdhjA8zy1d1xXXXO9EEIhor0cj1FrPUObzmY4XdPpFIauo9FswjQM6LqBl3Yb1WoVpmkqrFYrVVsUBfI8V/u3cAQtiiLVzfd95YwRhiH4PrOUEjNqyk1OuYSUEyw/Fnh1Amgs0Kfxer0ebNsmWIp5LOY0TVX3zWazx6XV8wW0OI5VhqPRSPFkMiHH0TYXcieIlWPicoL5/P1Lk5zG5tX1hweHW3c2HMdRDzmXLMsUM8qsGKXLkotjQc6PBS3L2oJGdkl0vliA67n4HC4K8pjcdb1e78G55XlxMavyVM8L0vfz1/WjQ9WVRzk6ye9QOsS5Q5Fy53BDYV/I6xSnh0K7g2AYJ4jpow8WGZZZ8WtRdsW1aZYjpHeTNf0pXgitJea4toGrLolmf44TCU17YwG3LlD3JbRK5RHVWm33jz79C7pholGv4+7+AZ+Royo2SBXo7QAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 68.24324324324324%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAOCAYAAAAvxDzwAAAACXBIWXMAAAsSAAALEgHS3X78AAABoElEQVQ4y51T226CQBDl0/vQP+hrv6R9bKKNl2irSRNRYBEVEAS8VEXY05lFtLXV1k5ymF2YOXvmAFqz2UQYhpi4LlzPg0eYTFyYpgnLsmAJobJt2xC0FsJW+/F4TLW+qnddD8F0ioFpQbPtIU4j3e3QqNfRarXQaNRRqVTR7XbVvlar0b6CKI5VbZ7nChzJag1tMBhgSuzD4RCj0egAlxSziiAIkSQJYiI4zSWiKMJinsALo4LQIbJerwdeG4ahMo/X7/cxn8/V6VJKvuJSxMt3aOwVn8j+hUGA2WwG3/eVujA8rtlXzo7jqBo+oEQ5crRYFQp5XM4mmcqZPZQyx45ylmUK3FSu+VkZJemB0CCF7Jmu62pcHlMIq1DxyfRTlCTfCHlkvrHdbpGmqcJms1HqzsWvhNfGRUJjT5hlPIr8YvY5FD4eCfMfFcqMQMaf8eycf/vm4sNeEmGfXkREXKPlDos0V6R5/newgOk6g7eR8OIFNF04uBPAzZtENcb1fhLuqf9WB6r+FtrD4yM6/J+222i3X/4F7u10XvH0XMMHP4kr/jfUHaMAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
@@ -893,7 +1668,7 @@ new_token &lt;span class=&quot;token operator&quot;&gt;+=&lt;/span&gt; &lt;span 
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 58.78378378378378%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAMABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABAADBf/EABUBAQEAAAAAAAAAAAAAAAAAAAMC/9oADAMBAAIQAxAAAAEaz7GiLlx1/8QAGxAAAQUBAQAAAAAAAAAAAAAAAgABAxIhBBP/2gAIAQEAAQUCjkJEdTx1zs1PMEWF/8QAFhEBAQEAAAAAAAAAAAAAAAAAABIB/9oACAEDAQE/AaxT/8QAFhEBAQEAAAAAAAAAAAAAAAAAABIB/9oACAECAQE/AZ1D/8QAGxAAAgMAAwAAAAAAAAAAAAAAABEBITEiMkH/2gAIAQEABj8CqajTtxQ2jPTCUf/EABwQAQEBAAIDAQAAAAAAAAAAAAERADFBIVFhcf/aAAgBAQABPyFPhLcDjQnmRnvK6C6jQ/WtLf6uECQvvf/aAAwDAQACAAMAAAAQFD//xAAXEQEBAQEAAAAAAAAAAAAAAAABACFh/9oACAEDAQE/EADTY5v/xAAYEQEAAwEAAAAAAAAAAAAAAAABABEhUf/aAAgBAgEBPxBRxyW7P//EABwQAQEBAQACAwAAAAAAAAAAAAERIQAxQVFhkf/aAAgBAQABPxBAgBRYfOpxGQKFMfTZu83gA8L9Pz2v2trMDiPMQBUJ9vQsSgLv/9k=&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 58.78378378378378%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAMABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAMEBf/EABUBAQEAAAAAAAAAAAAAAAAAAAMC/9oADAMBAAIQAxAAAAGKxFJowzA6/8QAHBABAAIBBQAAAAAAAAAAAAAAAgABAwQSEyEi/9oACAEBAAEFAhkUS2vq5pTVjhEXl//EABYRAQEBAAAAAAAAAAAAAAAAAAASAf/aAAgBAwEBPwGsU//EABYRAQEBAAAAAAAAAAAAAAAAAAASAf/aAAgBAgEBPwGdQ//EABwQAAMAAQUAAAAAAAAAAAAAAAABESIhMVFx4f/aAAgBAQAGPwLTboWWJbB3k9Gkf//EABsQAQEBAAIDAAAAAAAAAAAAAAERACExQVHR/9oACAEBAAE/Iep0NZUwMBQnjPzF0YXF4Ipx2saVAfe//9oADAMBAAIAAwAAABCn/wD/xAAXEQEBAQEAAAAAAAAAAAAAAAABACFh/9oACAEDAQE/EADTY5v/xAAXEQEBAQEAAAAAAAAAAAAAAAABACFR/9oACAECAQE/EFHHJXb/xAAcEAEBAAICAwAAAAAAAAAAAAABEQAhQVExYdH/2gAIAQEAAT8QS3IokO6mCASTylFZ3mmIp4Nnt3jOKmXjR9cUP6ARCLreXE6ALP/Z&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
