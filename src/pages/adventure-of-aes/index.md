@@ -263,8 +263,6 @@ Thats it! We can iterate this process for all byte position of $RK_0$. Note that
 
 > **NOTE:** Because we already found `RoundKey` of round 0, we don't need to reverse the key expansion since this `RoundKey` is already equal to the AES `MasterKey`
 
-Python implementation of this attack can be found [here](https://github.com/Merricx/aes-attack/blob/main/round1-diff.py)
-
 # 2 Round AES
 
 ![](round2-0.png)
