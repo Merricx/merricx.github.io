@@ -2,14 +2,29 @@
 
 My personal blog. Forked from [overreacted.io](https://overreacted.io/).
 
-## Local Development
+## Development
+
+Highly recommended to run in node 14.x
+
+- Install yarn
 
 ```
-yarn install
+sudo npm -g yarn
+```
+
+- Initialization
+
+```
+yarn
+```
+
+- Test and Deploy in local
+
+```
 yarn dev
 ```
 
-## Publish
+- Publish and Build
 
 ```
 yarn deploy
