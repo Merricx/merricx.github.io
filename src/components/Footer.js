@@ -28,11 +28,11 @@ class Footer extends React.Component {
         </a>{' '}
         &bull;{' '}
         <a
-          href="https://telegram.me/merricx"
+          href="mailto:imam@merri.cx"
           target="_blank"
           rel="noopener noreferrer"
         >
-          telegram
+          email
         </a>
       </footer>
     );

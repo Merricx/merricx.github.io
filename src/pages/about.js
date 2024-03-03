@@ -11,8 +11,8 @@ class AboutPage extends React.Component {
           <p>
             Hi, <b style={{ color: 'var(--blue)' }}>merricx</b> here. I am
             security engineer from Indonesia that passioned about cryptography
-            and data security in general. I also plays CTF sometimes when not
-            doing anything, especially crypto challenges.<br></br>
+            and data security.<br></br>In my free times, I play CTF with SKSD
+            Team, especially crypto challenges.<br></br>
           </p>
           <p>Get in touch with me:</p>
           <ul>
@@ -27,8 +27,8 @@ class AboutPage extends React.Component {
               </a>
             </li>
             <li>
-              <a target="_blank" href="https://telegram.me/merricx">
-                Telegram
+              <a target="_blank" href="mailto:imam@merri.cx">
+                Email
               </a>
             </li>
           </ul>
