@@ -10,11 +10,11 @@ class AboutPage extends React.Component {
           <hr></hr>
           <p>
             Hi, <b style={{ color: 'var(--blue)' }}>merricx</b> here. I am
-            security engineer from Indonesia that passioned about cryptography
+            security engineer from Indonesia that passionate about cryptography
             and data security.<br></br>In my free times, I play CTF with SKSD
             Team, especially crypto challenges.<br></br>
           </p>
-          <p>Get in touch with me:</p>
+          <p>Get in touch:</p>
           <ul>
             <li>
               <a target="_blank" href="https://github.com/merricx">

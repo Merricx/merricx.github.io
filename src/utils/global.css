@@ -237,6 +237,18 @@ pre[class*='language-'] ::selection {
   color: rgb(178, 204, 214);
 }
 
+.token.coord {
+  color: rgb(130, 170, 255);
+}
+
+.token.deleted {
+  color: rgb(255, 88, 116);
+}
+
+.token.inserted {
+  color: rgb(173, 219, 103);
+}
+
 pre[data-line] {
   padding: 1em 0 1em 3em;
   position: relative;
