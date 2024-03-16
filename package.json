@@ -8,11 +8,12 @@
     "gatsby"
   ],
   "scripts": {
-    "develop": "gatsby develop",
+    "dev": "gatsby develop",
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "clean": "gatsby clean"
+    "clean": "gatsby clean",
+    "deploy": "gatsby build && gh-pages -d public -b main"
   },
   "dependencies": {
     "gatsby": "^5.13.3",
@@ -42,5 +43,9 @@
     "react-dom": "^18.2.0",
     "typography": "^0.16.24",
     "typography-theme-wordpress-2016": "^0.16.19"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1",
+    "husky": "^9.0.11"
   }
 }
