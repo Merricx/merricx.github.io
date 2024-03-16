@@ -1,87 +1,46 @@
 {
   "name": "merricx-blog",
+  "version": "1.1.0",
   "private": true,
-  "engines": {
-    "node": "12.x || 13.x || 14.x || 16.x"
-  },
-  "description": "Merricx personal blog",
-  "version": "1.0.0",
-  "author": "merricx",
-  "bugs": {
-    "url": "https://github.com/merricx/personal-blog"
+  "description": "merricx-blog",
+  "author": "Merricx",
+  "keywords": [
+    "gatsby"
+  ],
+  "scripts": {
+    "develop": "gatsby develop",
+    "start": "gatsby develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean"
   },
   "dependencies": {
-    "gatsby": "^2.2.0",
-    "gatsby-plugin-catch-links": "^2.0.9",
-    "gatsby-plugin-disqus": "^1.2.2",
-    "gatsby-plugin-ebook": "^1.0.2",
-    "gatsby-plugin-feed": "^2.0.8",
-    "gatsby-plugin-google-analytics": "^2.0.5",
-    "gatsby-plugin-i18n": "^0.4.2",
-    "gatsby-plugin-manifest": "^2.0.5",
-    "gatsby-plugin-offline": "^2.0.5",
-    "gatsby-plugin-react-helmet": "^3.0.0",
-    "gatsby-plugin-sharp": "~2.8",
-    "gatsby-plugin-typography": "^2.2.0",
-    "gatsby-remark-autolink-headers": "2.0.12",
-    "gatsby-remark-copy-linked-files": "^2.0.5",
+    "gatsby": "^5.13.3",
+    "gatsby-plugin-catch-links": "^5.13.1",
+    "gatsby-plugin-google-gtag": "^5.13.1",
+    "gatsby-plugin-i18n": "^1.0.1",
+    "gatsby-plugin-image": "^3.13.1",
+    "gatsby-plugin-manifest": "^5.13.1",
+    "gatsby-plugin-offline": "^6.13.1",
+    "gatsby-plugin-react-helmet": "^6.13.1",
+    "gatsby-plugin-sharp": "^5.13.1",
+    "gatsby-plugin-sitemap": "^6.13.1",
+    "gatsby-plugin-typography": "^5.13.1",
+    "gatsby-remark-autolink-headers": "^6.13.1",
+    "gatsby-remark-copy-linked-files": "^6.13.1",
     "gatsby-remark-external-links": "^0.0.4",
-    "gatsby-remark-images": "^2.0.6",
+    "gatsby-remark-images": "^7.13.1",
+    "gatsby-remark-katex": "^7.13.1",
     "gatsby-remark-mathjax": "^1.0.0",
-    "gatsby-remark-prismjs": "^3.0.0",
-    "gatsby-remark-responsive-iframe": "^2.0.5",
-    "gatsby-remark-smartypants": "^2.0.5",
-    "gatsby-source-filesystem": "^2.0.12",
-    "gatsby-transformer-remark": "2.1.17",
-    "gatsby-transformer-sharp": "^2.1.9",
-    "husky": "^1.3.1",
-    "lint-staged": "^8.1.0",
-    "lodash": "^4.17.11",
-    "prismjs": "^1.15.0",
-    "react": "^16.8.2",
-    "react-dom": "^16.8.2",
-    "react-helmet": "^5.2.0",
-    "react-typography": "^0.16.13",
-    "typography": "^0.16.17",
-    "typography-theme-wordpress-2016": "^0.15.10"
-  },
-  "devDependencies": {
-    "eslint": "^4.19.1",
-    "eslint-plugin-react": "^7.11.1",
-    "gh-pages": "^1.2.0",
-    "glob": "^7.1.3",
-    "prettier": "^1.14.2"
-  },
-  "homepage": "https://merricx.github.io/",
-  "license": "MIT",
-  "scripts": {
-    "dev": "gatsby develop",
-    "lint": "./node_modules/.bin/eslint --ext .js,.jsx --ignore-pattern public .",
-    "format": "prettier --write '{gatsby-*.js,src/**/*.{js,jsx,json,css}}'",
-    "develop": "gatsby develop",
-    "start": "npm run develop",
-    "build": "rm -rf public && rm -rf .cache && gatsby build",
-    "now-build": "gatsby build",
-    "deploy": "yarn build && gh-pages -d public -b main",
-    "dry": "yarn build && cp now.json public/ && cd public && now",
-    "js-to-jsx": "node src/utils/js-to-jsx"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "{gatsby-*.js,src/**/*.{js,jsx,json,css}}": [
-      "yarn format",
-      "git add"
-    ],
-    "src/pages/**/*.md": [
-      "yarn run js-to-jsx",
-      "git add"
-    ]
-  },
-  "resolutions": {
-    "**/sharp": "^0.23"
+    "gatsby-remark-prismjs": "^7.13.1",
+    "gatsby-remark-smartypants": "^6.13.1",
+    "gatsby-source-filesystem": "^5.13.1",
+    "gatsby-transformer-remark": "^6.13.1",
+    "gatsby-transformer-sharp": "^5.13.1",
+    "katex": "^0.13.24",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typography": "^0.16.24",
+    "typography-theme-wordpress-2016": "^0.16.19"
   }
 }
