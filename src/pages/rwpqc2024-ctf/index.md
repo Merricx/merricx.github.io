@@ -1,24 +1,24 @@
 ---
 title: "RWPQC 2024 CTF"
-date: 2024-03-20 07:22
+date: 2024-03-21 19:17
 spoiler: All my solutions of the RWPQC 2024 CTF challenges
 cta: 'ctf'
 ---
 
 In this early March, there is a small individual CTF competition organized by [SandboxAQ](https://www.sandboxaq.com/) as part of annual RWPQC (Real World Post-Quantum Cryptography) workshop event which is also co-located as part of RWC 2024 (Real World Cryptography) event.
 
-I casually participated in this CTF and managed to get 5th position in the end. Although, I don't really care about the rank since I'm not eligible for the prize anyway and I just want to think this as an excuse to learn about PQC, especially in the protocol level.
+I casually participated in this CTF and ended up in 5th position. Although, I don't really care about the rank since I'm not eligible for the prize anyway and I just want to think this as an excuse to learn about PQC, especially in the protocol level.
 
-The full challenges can be accessed from [this Github repository](https://github.com/sandbox-quantum/CTF-RWPQC2024), where unlike regular CTF, participant must send the solution (a.k.a. flag) to the SandboxAQ email.
+The full challenges can be accessed from [this Github repository](https://github.com/sandbox-quantum/CTF-RWPQC2024), where unlike regular CTF, participant must send the solution (flag) to the SandboxAQ email.
 
-There are four challenges in total. They are mostly related to **Kyber**, one of standardized post-quantum cryptography which is now formally called as **ML-KEM**. 
+There are four challenges in total. They are mostly related to [**Kyber**](https://pq-crystals.org/kyber/), one of standardized post-quantum cryptography which is now formally called as **ML-KEM**. 
 
 
 # TL;DR
 
 Because the technical explanation of all challenges combined become quite long, I wrote small TL;DR on how each challenge was solved. Please refer to the respective sub section of each challenge for detailed explanation.
 
-- [**Challenge 4**: Dancing by Xyber](#challenge-4) - Fix incorrect implementation of *x25519kyber768draft00* to achieve TLS handshake
+- [**Challenge 4**: Dancing by Xyber](#challenge-4) - Fix incorrect implementation of *x25519kyber768draft00* to achieve TLS 1.3 handshake
 - [**Challenge 3**: Breaking a real PQC implementation. How to be a crypto analyst](#challenge-3) - Server implemented Kyber with deterministic PRNG (*AES256_CTR_DRBG*) but with very low entropy seed (24 bits) which is easily reconstructed to derive shared secret
 - [**Challenge 1**: Degrees of polynomials in post-quantum cryptography. Breaking baby Kyber](#challenge-1) - Small Kyber parameter which is solvable via lattice reduction to recover private key
 - [**Challenge 2**: Attack on Trained Logistic Regression Model](#challenge-2) - Training data reconstruction in GLM by solving linear equation due to intercept parameter, as proposed by Balle *et al*.
@@ -86,7 +86,7 @@ In summary, this is the simplified flow of TLS 1.3 handshake:
 
 1. **`ClientHello`:** The client initiate the handshake by sending message containing supported cryptographic algorithms and other parameters to the server
 2. **`ServerHello`:** The server responds by selecting compatible cryptographic parameters from the client's list and sending them back
-3. **`EncryptedExtensions`:** The server send extensions from `ClientHello` that are not required to determine the cryptographic parameters.
+3. **`EncryptedExtensions`:** The server sends protected extensions response that is requested from `ClientHello`.
 4. **`Certificate`:** The server sends one or more digital certificate to prove server's identity
 5. **`CertificateVerify`:** The server provides digital signature that prove certificate's ownership
 7. **`Finished`:** Both parties send "Finished" messages to confirm the completion of the handshake. This messages contain MAC over the entire handshake as confirmation.
@@ -95,7 +95,7 @@ Back to our previous problem, the error was happened after `ClientHello` where s
 
 ### Hybrid Key Exchange
 
-At the time of writing, post-quantum cryptography is not "officially" standardized in TLS yet. But several RFC drafts are already written and proposed to implement this to practical implementation. 
+At the time of writing, post-quantum cryptography is not "officially" standardized in TLS yet. But several RFC drafts already written and proposed to bring this to practical implementation. 
 
 The approach is to use so-called "hybrid key exchange" which combines classical cryptography (RSA, DH, ECDH) with post-quantum cryptography with the goal of providing security even if all but one of the component algorithms is broken.
 
@@ -127,7 +127,7 @@ def _init_key_settings(self):
     self.heartbeat_response_callback = None
 ```
 
-Which we can conclude that in `ClientHello` step, the client offer `keyShareEntry` to server of either `x25519` or `x25519kyber768draft00`. Presumably, the server responds back to choose `x25519kyber768draft00`.
+Which we can conclude that in the `ClientHello` step, the client offer `keyShareEntry` to server of either `x25519` or `x25519kyber768draft00`. Presumably, the server responds back to choose `x25519kyber768draft00`.
 
 If we are then looking at the `tlslite/keyexchange.py`, we will see the following oddity in `get_random_private_key` and `calc_public_value` function:
 
@@ -160,21 +160,21 @@ def calc_shared_key(self, private, peer_share):
     ...
 ```
 
-Those three functions are just implementing normal `x25519` instead of `x25519kyber768draft00`, that's why the server reject the parameters.
+Those three functions are just implementing normal `x25519` instead of `x25519kyber768draft00`! That's why the server reject the parameters.
 So we need to fix these to correct implementation.
 
 ### X25519Kyber768Draft00
 
 According to the specification of *X25519Kyber768Draft00* section 3, it defined that in the client share `key_exchange` value contains the concatenation of the X25519 ephemeral share (32 bytes) and the Kyber768 public key (1184 bytes).
 
-After `key_exchange` received by the server, it will respond back as `key_exchange` to the client with ephemeral share of x25519 (first 32 bytes) and ciphertext of Kyber768 (last 1088 bytes). Then, shared secret can be calculated by concatenating ephemeral share and ciphertext into one.
+After `key_exchange` received by the server, it will respond back as `key_exchange` to the client with ephemeral server public key of x25519 (32 bytes) and ciphertext of Kyber768 (1088 bytes). Then, shared secret can be calculated by concatenating shared secret of x25519 and Kyber768 into one.
 
-Let $sk_c$ be client's x25519 ephemeral private key, $pk_s$ be x25519 ephemeral public key from server, $pqsk_c$ be client's Kyber768 private key and $pqctxt_s$ be Kyber768 ciphertext, then shared secret $S$ calculated with:
+Let $sk_c$ be client's x25519 ephemeral private key, $pk_s$ be x25519 ephemeral public key from server, $pqsk_c$ be client's Kyber768 ephemeral private key and $pqctxt_s$ be Kyber768 ciphertext, then shared secret $S$ calculated with:
 
 $$
 \begin{aligned}
 S_1 & = \text{X25519}(sk_c, pk_s) \\
-S_2 & = \text{KEM.DEC}(pqsk_c, pqctxt) \\
+S_2 & = \text{KEM.DEC}(pqsk_c, pqctxt_s) \\
 S & = S_1 || S_2
 \end{aligned}
 $$
@@ -253,9 +253,9 @@ After shared secret exchanged, consecutive messages (denoted by red line) are en
 
 ### Reverse the Binary
 
-Because the given files are compiled binaries, we need to reverse the binaries in order to find out how the protocol is implemented in the program. 
+Because the given files are compiled binaries, we need to reverse these binaries in order to find out how the protocol is implemented in the program. 
 
-I personally used both Ghidra and IDA Free to decompile the program, then I look and compare at both decompiled results because these results sometimes are not accurate. In this case IDA was better so the solution will refer to the decompiled version from IDA.
+I personally used both Ghidra and IDA Free to decompile the program, then I looked and compared at both decompiled results because these results sometimes are not accurate. In this case IDA was better so the solution will refer to the decompiled version from IDA.
 
 After inspected both binaries and jump to the `main` function, generally both `ctf_client` and `ctf_server` implemented the protocol exactly as the description said. The program seems to be using [liboqs](https://github.com/open-quantum-safe/liboqs) library to implement Kyber KEM.
 
@@ -273,7 +273,7 @@ Wow, turns out the value of `orig seed` is only consist of 0 and 1 although it p
 
 > I'm not confirming further the exact cause why is this happened, because ~my skill issue~ I'm too lazy to setup debugger. My guess is because of type confusion from the `entropy_input` variable. I just ignore the cause and assume that the seed only randomized 24 bits (24 bytes but only `\x00` and `\x01`).
 
-Note that NIST-KAT algorithm is random number generator that uses AES256_CTR_DBRG internally and it is actually used to generate determinisitic random number to pass NIST KAT (Known Answer Test) or also known as test vectors, hence the algorithm name.
+Note that NIST-KAT algorithm is random number generator that uses AES256_CTR_DBRG internally and it is actually used to generate determinisitic random number to pass NIST test vectors or also known as NIST KAT (Known Answer Test), hence the algorithm name.
 
 Since this RNG is deterministic and the program only uses 24-bits seed instead of 384-bit, we can easily perform brute-force to reconstruct the seed and derive the Kyber private key, which is only $2^{24}$ in complexity.
 
@@ -447,7 +447,7 @@ $$
 \end{aligned}
 $$
 
-> Since $k=2$, then the matrix dimension of $A$ will be $k \times k$
+> Matrix dimension of $\mathbf{A}$ is equal to $k \times k$
 
 Then, we calculate $\mathbf{t}$:
 
@@ -550,10 +550,10 @@ $$
 
 > where $\mathbf{I}$ denotes identity matrix, while $m$ and $n$ are dimension of matrix $\mathbf{A}$
 
-It will contain the vector  $\mathbf{x} = (-\mathbf{e}, \mathbf{s}, -1)$ of $\mathcal{L}$ which satisfy:
+$\mathcal{L}$ will contain the vector $\mathbf{x} = (-\mathbf{e}, \mathbf{s}, -1) \in \mathcal{L}$ which satisfy:
 
 $$
--\mathbf{e} \equiv \mathbf{s}\mathbf{A} - \mathbf{t} \mod q
+-\mathbf{e} \equiv \mathbf{A}\mathbf{s} - \mathbf{t} \mod q
 $$
 
 This vector $\mathbf{x}$ is likely to be shortest vector of $\mathcal{L}$.
@@ -564,7 +564,7 @@ So, by running BKZ/LLL algorithm on matrix $\mathbf{B}$ to search shortest vecto
 
 ### Solve Script
 
-Actually, turns out implementing the solution script in this challenge is not as straightforward as I thought.
+Actually, implementing the solution script in this challenge is not as straightforward as I thought.
 
 Mainly because you cannot call `LLL` method with Sage's `Matrix_generic_dense` which is the class type used when you construct matrix of polynomial. This is when I just learned that you can actually transform matrix of polynomial into "concatenated" matrix of integers.
 
@@ -733,14 +733,14 @@ s = list(-shortest_vector[32:64])
 e = vector([R(e[:16]), R(e[16:])])
 s = vector([R(s[:16]), R(s[16:])])
 
-assert e == t - A*s
+assert -e == A*s - t
 
 #### ASSERTION
 #### Check if enc/dec correct
 m = [random.choice([0, 1]) for _ in range(16)]
 me = encrypt((A, t), m)
 md = decrypt(s, me)
-print(md)
+
 assert m == compress(md)
 
 
@@ -782,13 +782,13 @@ Our objective is to recover last training data $(\mathbf{x}_n, y_n)$.
 
 #### Model Prediction
 
-In order to predict label $y$ from feature vector $\mathbf{x}$, we do the following:
+In order to predict label $y$ from feature vector $\mathbf{x}$, we use the following *sigmoid* function:
 
 $$
-p(x) = \frac{1}{1 + e^{-(\mathbf{\theta x})}}
+p(\mathbf{x}) = \frac{1}{1 + e^{-(\mathbf{\theta x})}}
 $$
 
-where $\theta$ denotes trained model weight and $e$ denotes exponential function. If $p(x) > 0.5$ then the predicted label $y$ is 1, otherwise it is 0.
+where $\theta$ denotes trained model weight and $e$ denotes exponential function. If $p(\mathbf{x}) > 0.5$ then the predicted label $y$ is 1, otherwise it is 0.
 
 > In this case we used intercept parameter, where $\mathbf{x}_{0}$ is equal to 1
 
@@ -836,7 +836,7 @@ This all looks good already, but unfortunately the above method doesn't 100% acc
 
 Moreover, this challenge doesn't provide us with the code that generate the model, so we cannot really reproduce the challenge and solve it with test/different value.
 
-So, what I did was by using provided training data, train it with default Logistic Regression in `sklearn`, then  remove one row, and solve it to test the correctness. Iterate these steps over all rows.
+So, what I did was by using provided training data, train it with default Logistic Regression in `sklearn`, then  remove one row, and try to find the removed data to test the correctness. Iterate these steps over all rows.
 
 The following script is the initial solve script that able to recover the training data with more than half of total rows (267 out of 499 rows) with almost 100% correctness.
 
@@ -895,6 +895,7 @@ for ii in range(1,500):
         diff = x_original[row_to_drop][i] - int(x_guess[i])
         print(int(x_guess[i]), '->', x_original[row_to_drop][i], " = ", diff)
         
+        # tolerate up to 2 number different
         if abs(diff) in [0,1,2]:
             num_correct += 1
 
@@ -906,7 +907,7 @@ print("Number of correct", total_correct)
 
 Unfortunately, when I applied the script against the challenge, the recovered last data was wrong when I trying to submit them.
 
-After some time, I've found improved [implementation](https://github.com/facebookresearch/bounding_data_reconstruction/blob/2427e180f220ef240b2797e5ce8afd5e63495b29/mnist_logistic_reconstruction.py#L23) from the previous method by Guo *et al.* <sup id="fnref-7">[[7]](#fn-7)</sup> by providing label $y$ of the target which will resulting many possible recovered features that are still in the close approximate number
+After some time, I found improved [implementation](https://github.com/facebookresearch/bounding_data_reconstruction/blob/2427e180f220ef240b2797e5ce8afd5e63495b29/mnist_logistic_reconstruction.py#L23) from the previous method by Guo *et al.* <sup id="fnref-7">[[7]](#fn-7)</sup> by also providing label $y$ of the target which will result in many possible recovered features that are still in the close approximate number.
 
 ```python
 import numpy as np
@@ -962,15 +963,17 @@ for guess in z:
     print(guess[1:])
 ```
 
-When I run the code, there were 118 unique solutions that is impossible to me to submit all of them as I don't want to spam the email submission.
+When I run the code, there were 118 unique solutions that is impossible to me to submit all of them as I don't want to spam the email submission. 
+
+It is also possible that these solutions still have *off-by-one* difference due to floating-point precision.
 
 At this point, this is more become of "improvement and optimization" which in my opinion is not fun anymore. Moreover, I cannot confirm what is correct flag and what not, since the flag is not in usual "formatted form".
 
 So, I decided to mark this challenge as done and move on.
 
-### Post-CTF Reality
+### Post-CTF Clarity
 
-After CTF was ended, I asked the expected answer of this challenge and one of the participant (`@jibe`) gave me the following answer (excluding the label):
+After the CTF ended, I asked for the expected answer of this challenge and one of the participant (`@jibe`) gave me the following answer (excluding the label):
 
 ```
 [3, 14, 4, -3 ,-13, 11, -5, -16, 16, 16, -12, 0, 9, 1, -11, -14]
@@ -991,11 +994,11 @@ Then, I look up at my previous list of solutions from my solve script, and I fou
 ...
 ```
 
-I'm very close!!! 😢
+I'm very close!!! But let's pretend I solved the challenge already 😆
 
 # Closing Remarks
 
-Overall, this is quite good CTF and I learned a lot, especially about Kyber and its application in real-world settings. Thanks to SandboxAQ for organizing this CTF. I also hope this is become annual tradition CTF and become more competitive CTF with more serious infrastructure.
+Overall, this is quite good CTF and I learned a lot, especially about Kyber and its application in real-world settings. Thanks to SandboxAQ for organizing this CTF. I also hope this can become annual tradition CTF and become more competitive CTF with serious infrastructure.
 
 Anyway, here is a low-effort meme that I made while learning about Kyber :D
 
