@@ -11,7 +11,7 @@ I casually participated in this CTF and ended up in 5th position. Although, I do
 
 The full challenges can be accessed from [this Github repository](https://github.com/sandbox-quantum/CTF-RWPQC2024), where unlike regular CTF, participant must send the solution (flag) to the SandboxAQ email.
 
-There are four challenges in total. They are mostly related to [**Kyber**](https://pq-crystals.org/kyber/), one of standardized post-quantum cryptography which is now formally called as **ML-KEM**. 
+There are four challenges in total. They are mostly related to [**Kyber**](https://pq-crystals.org/kyber/), one of (to be) standardized post-quantum cryptography which is formally called as **ML-KEM**. 
 
 
 # TL;DR
@@ -271,7 +271,7 @@ Let's see by running both binaries in our local and see how this seed changing.
 
 Wow, turns out the value of `orig seed` is only consist of 0 and 1 although it printed as hex? Moreover, only some of the right most bytes that are dynamically changing (24 bytes to be exact).
 
-> I'm not confirming further the exact cause why is this happened, because ~my skill issue~ I'm too lazy to setup debugger. My guess is because of type confusion from the `entropy_input` variable. I just ignore the cause and assume that the seed only randomized 24 bits (24 bytes but only `\x00` and `\x01`).
+> I'm not confirming further the exact cause why is this happened, because ~my skill issue~ I'm too lazy to setup debugger. I just ignore it and assume that the seed only randomized 24 bits (24 bytes but only `\x00` and `\x01`).
 
 Note that NIST-KAT algorithm is random number generator that uses AES256_CTR_DBRG internally and it is actually used to generate determinisitic random number to pass NIST test vectors or also known as NIST KAT (Known Answer Test), hence the algorithm name.
 
@@ -525,7 +525,7 @@ As we can see in the key generation, in order to get private key $\mathbf{s}$ we
 
 > Imagine if we did not add this $\mathbf{e}$, then getting $\mathbf{s}$ will be as simply as $\mathbf{s} = \mathbf{A}^{-1}\mathbf{t}$. 
 
-That's why this $e$ is needed to add some "noise" or "error" to the equation so it is not easy to inverse. This problem of finding $\mathbf{s}$ from $\mathbf{t} = \mathbf{As} + \mathbf{e}$ is called *Learning with Errors* (LWE) and it is considered as hard problem, even for quantum computer.
+That's why this $\mathbf{e}$ is needed to add some "noise" or "error" to the equation so it is not easy to inverse. This problem of finding $\mathbf{s}$ from $\mathbf{t} = \mathbf{As} + \mathbf{e}$ is called *Learning with Errors* (LWE) and it is considered as hard problem, even for quantum computer.
 
 In Kyber, this problem is more spesifically called *Module Learning with Errors* (MLWE) because we are working with vectors of polynomials.
 
@@ -566,7 +566,7 @@ So, by running BKZ/LLL algorithm on matrix $\mathbf{B}$ to search shortest vecto
 
 Actually, implementing the solution script in this challenge is not as straightforward as I thought.
 
-Mainly because you cannot call `LLL` method with Sage's `Matrix_generic_dense` which is the class type used when you construct matrix of polynomial. This is when I just learned that you can actually transform matrix of polynomial into "concatenated" matrix of integers.
+Mainly because (at the time of writing) you cannot call `LLL` method with Sage's `Matrix_generic_dense` which is the class type used when you construct matrix of polynomial. This is when I just learned that you can actually transform matrix of polynomial into "concatenated" matrix of integers.
 
 For example, let say $n = 4$ and we have following matrix $\mathbf{A}$:
 
