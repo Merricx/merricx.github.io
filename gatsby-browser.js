@@ -1,12 +1,7 @@
 // gatsby-browser.js
-import React from "react";
 
 export function onRouteUpdate({ location }) {
   console.log("new pathname", location.pathname);
-  // console.log(window.MathJax);
-  // if (window.MathJax !== undefined) {
-  //   window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub]);
-  // }
 }
 
 // Forked Gatsby default to not remount on switches between
@@ -59,7 +54,7 @@ if (typeof oldShouldUpdateScroll !== "function") {
 }
 require("gatsby-remark-autolink-headers/gatsby-browser").shouldUpdateScroll =
   function shouldUpdateScroll({ prevRouterProps, routerProps }) {
-    const { pathname, hash } = routerProps.location;
+    const { pathname } = routerProps.location;
     if (prevRouterProps) {
       const {
         location: { pathname: oldPathname },

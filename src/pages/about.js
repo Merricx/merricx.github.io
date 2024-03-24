@@ -28,17 +28,25 @@ class AboutPage extends React.Component {
           <h3>Get in touch</h3>
           <ul style={{ marginLeft: "10px" }}>
             <li>
-              <a target="_blank" href="https://github.com/merricx">
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://github.com/merricx"
+              >
                 Github
               </a>
             </li>
             <li>
-              <a target="_blank" href="https://twitter.com/merricx_">
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://twitter.com/merricx_"
+              >
                 Twitter
               </a>
             </li>
             <li>
-              <a target="_blank" href="mailto:imam@merri.cx">
+              <a target="_blank" rel="noreferrer" href="mailto:imam@merri.cx">
                 Email
               </a>
             </li>
