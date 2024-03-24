@@ -284,3 +284,13 @@ pre[data-line] {
   float: left;
   min-width: 100%;
 }
+
+footnotes {
+  font-size: smaller;
+  opacity: 0.7;
+}
+
+footnotes span {
+  margin-left: 2px;
+  margin-right: 2px;
+}

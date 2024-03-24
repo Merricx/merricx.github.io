@@ -1,25 +1,25 @@
-import React from 'react';
-import { Link, graphql } from 'gatsby';
-import { Disqus } from 'gatsby-plugin-disqus';
-import get from 'lodash/get';
+import React from "react";
+import { Link, graphql } from "gatsby";
+import get from "lodash/get";
 
-import '../fonts/fonts-post.css';
-import Bio from '../components/Bio';
-import Layout from '../components/Layout';
-import SEO from '../components/SEO';
-import Signup from '../components/Signup';
-import Panel from '../components/Panel';
-import { formatPostDate, formatReadingTime } from '../utils/helpers';
-import { rhythm, scale } from '../utils/typography';
+import "../fonts/fonts-post.css";
+import Bio from "../components/Bio";
+import Layout from "../components/Layout";
+import SEO from "../components/SEO";
+import Panel from "../components/Panel";
+import { formatPostDate, formatReadingTime } from "../utils/helpers";
+import { rhythm, scale } from "../utils/typography";
 import {
   codeToLanguage,
   createLanguageLink,
   loadFontsForCode,
   replaceAnchorLinksByLanguage,
-} from '../utils/i18n';
+} from "../utils/i18n";
 
-const GITHUB_USERNAME = 'merricx';
-const GITHUB_REPO_NAME = 'blog';
+import "katex/dist/katex.min.css";
+
+const GITHUB_USERNAME = "merricx";
+const GITHUB_REPO_NAME = "blog";
 const systemFont = `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
     "Droid Sans", "Helvetica Neue", sans-serif`;
@@ -28,8 +28,8 @@ class Translations extends React.Component {
   render() {
     let { translations, lang, languageLink, editUrl } = this.props;
 
-    let readerTranslations = translations.filter(lang => lang !== 'ru');
-    let hasRussianTranslation = translations.indexOf('ru') !== -1;
+    let readerTranslations = translations.filter((lang) => lang !== "ru");
+    let hasRussianTranslation = translations.indexOf("ru") !== -1;
 
     return (
       <div className="translations">
@@ -38,17 +38,17 @@ class Translations extends React.Component {
             <span>
               {hasRussianTranslation && (
                 <span>
-                  Originally written in:{' '}
-                  {'en' === lang ? (
-                    <b>{codeToLanguage('en')}</b>
+                  Originally written in:{" "}
+                  {"en" === lang ? (
+                    <b>{codeToLanguage("en")}</b>
                   ) : (
-                    <Link to={languageLink('en')}>English</Link>
+                    <Link to={languageLink("en")}>English</Link>
                   )}
-                  {' • '}
-                  {'ru' === lang ? (
+                  {" • "}
+                  {"ru" === lang ? (
                     <b>Русский (авторский перевод)</b>
                   ) : (
-                    <Link to={languageLink('ru')}>
+                    <Link to={languageLink("ru")}>
                       Русский (авторский перевод)
                     </Link>
                   )}
@@ -64,22 +64,22 @@ class Translations extends React.Component {
                   ) : (
                     <Link to={languageLink(l)}>{codeToLanguage(l)}</Link>
                   )}
-                  {i === readerTranslations.length - 1 ? '' : ' • '}
+                  {i === readerTranslations.length - 1 ? "" : " • "}
                 </React.Fragment>
               ))}
             </span>
           )}
-          {lang !== 'en' && (
+          {lang !== "en" && (
             <>
               <br />
               <br />
-              {lang !== 'ru' && (
+              {lang !== "ru" && (
                 <>
-                  <Link to={languageLink('en')}>Read in English</Link>
-                  {' • '}
+                  <Link to={languageLink("en")}>Read in English</Link>
+                  {" • "}
                 </>
               )}
-              <Link to={`/${lang}`}>View all translated posts</Link>{' '}
+              <Link to={`/${lang}`}>View all translated posts</Link>{" "}
             </>
           )}
         </Panel>
@@ -91,14 +91,9 @@ class Translations extends React.Component {
 class BlogPostTemplate extends React.Component {
   render() {
     const post = this.props.data.markdownRemark;
-    const siteTitle = get(this.props, 'data.site.siteMetadata.title');
-    let {
-      previous,
-      next,
-      slug,
-      translations,
-      translatedLinks,
-    } = this.props.pageContext;
+    const siteTitle = get(this.props, "data.site.siteMetadata.title");
+    let { previous, next, slug, translations, translatedLinks } =
+      this.props.pageContext;
     const lang = post.fields.langKey;
 
     // Replace original links with translated when available.
@@ -108,14 +103,14 @@ class BlogPostTemplate extends React.Component {
     // see utils/whitelist.js
     html = replaceAnchorLinksByLanguage(html, lang);
 
-    translatedLinks.forEach(link => {
+    translatedLinks.forEach((link) => {
       // jeez
       function escapeRegExp(str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       }
-      let translatedLink = '/' + lang + link;
+      let translatedLink = "/" + lang + link;
       html = html.replace(
-        new RegExp('"' + escapeRegExp(link) + '"', 'g'),
+        new RegExp('"' + escapeRegExp(link) + '"', "g"),
         '"' + translatedLink + '"'
       );
     });
@@ -128,11 +123,11 @@ class BlogPostTemplate extends React.Component {
     loadFontsForCode(lang);
     // TODO: this curried function is annoying
     const languageLink = createLanguageLink(slug, lang);
-    const enSlug = languageLink('en');
+    const enSlug = languageLink("en");
     const editUrl = `https://github.com/${GITHUB_USERNAME}/${GITHUB_REPO_NAME}/edit/master/src/pages/${enSlug.slice(
       1,
       enSlug.length - 1
-    )}/index${lang === 'en' ? '' : '.' + lang}.md`;
+    )}/index${lang === "en" ? "" : "." + lang}.md`;
 
     return (
       <Layout location={this.props.location} title={siteTitle}>
@@ -145,13 +140,13 @@ class BlogPostTemplate extends React.Component {
         <main>
           <article>
             <header>
-              <h1 style={{ color: 'var(--textTitle)' }}>
+              <h1 style={{ color: "var(--textTitle)" }}>
                 {post.frontmatter.title}
               </h1>
               <p
                 style={{
                   ...scale(-1 / 5),
-                  display: 'block',
+                  display: "block",
                   marginBottom: rhythm(1),
                   marginTop: rhythm(-4 / 5),
                 }}
@@ -174,32 +169,32 @@ class BlogPostTemplate extends React.Component {
         <aside>
           <hr
             style={{
-              color: 'rgba(210, 214, 220, 0.5)',
-              backgroundColor: 'rgba(210, 214, 220, 0.5)',
+              color: "rgba(210, 214, 220, 0.5)",
+              backgroundColor: "rgba(210, 214, 220, 0.5)",
               height: 2,
             }}
           />
           <h3
             style={{
-              fontFamily: 'Montserrat, sans-serif',
+              fontFamily: "Montserrat, sans-serif",
               marginTop: rhythm(0.25),
             }}
           ></h3>
           <Bio />
           <hr
             style={{
-              color: 'rgba(210, 214, 220, 0.5)',
-              backgroundColor: 'rgba(210, 214, 220, 0.5)',
+              color: "rgba(210, 214, 220, 0.5)",
+              backgroundColor: "rgba(210, 214, 220, 0.5)",
               height: 2,
             }}
           />
           <nav>
             <ul
               style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'space-between',
-                listStyle: 'none',
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                listStyle: "none",
                 padding: 0,
               }}
             >

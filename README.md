@@ -1,31 +1,31 @@
 # My Personal Blog
 
-My personal blog. Forked from [overreacted.io](https://overreacted.io/).
+My personal blog. Originally forked from [overreacted.io](https://overreacted.io/).
 
 ## Development
 
-Highly recommended to run in node 14.x
+Highly recommended to run in node 20.x
 
-- Install yarn
+- Install gatsby CLI
 
 ```
-sudo npm -g yarn
+npm install -g gatsby-cli
 ```
 
 - Initialization
 
 ```
-yarn
+npm install
 ```
 
 - Test and Deploy in local
 
 ```
-yarn dev
+gatsby develop
 ```
 
 - Publish and Build
 
 ```
-yarn deploy
+npm deploy
 ```
