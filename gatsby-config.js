@@ -58,7 +58,63 @@ module.exports = {
       },
     },
     "gatsby-plugin-image",
-    "gatsby-plugin-sitemap",
+    {
+      resolve: "gatsby-plugin-sitemap",
+      options: {
+        query: `
+        {
+          allSitePage {
+            nodes {
+              path 
+            }
+          }
+          allMarkdownRemark {
+            nodes {
+              fields {
+                slug
+              }
+              frontmatter {
+                date
+              }
+            }
+          }
+        }`,
+        resolveSiteUrl: () => "https://merri.cx/",
+        resolvePages: ({
+          allSitePage: { nodes: allSitePages },
+          allMarkdownRemark: { nodes: allMarkdownRemark }
+        }) => {
+          const blogPostsPages = allMarkdownRemark.reduce(
+            (acc, node) => ({
+              ...acc,
+              [node.fields.slug]: node.frontmatter,
+            }),
+            {},
+          );
+
+          return allSitePages.map((page) => ({
+            ...page,
+            ...blogPostsPages[page.path],
+          }));
+        },
+        serialize: ({path, date}) => {
+          if (date) {
+            return {
+              url: path,
+              lastmod: date,
+              priority: 0.7,
+              changefreq: "daily",
+            };
+          } else {
+            return {
+              url: path,
+              priority: 0.5,
+              changefreq: "daily",
+            };
+          }
+        }
+      },
+    },
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
