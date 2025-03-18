@@ -20,9 +20,11 @@ class AboutPage extends React.Component {
             src={profilePic}
           />
           <p>
-            Hi, <b style={{ color: "var(--blue)" }}>merricx</b> here. I am
-            security engineer from Indonesia that passionate about cryptography
-            and security.<br></br>In my (rare) free times, I play CTF with SKSD
+            Hi, I am <b style={{ color: "var(--blue)" }}>Imam Al-Fath</b>,
+            a security researcher from Indonesia that passionate about cryptography
+            and security.
+            <br></br>
+            In my (rare) free times, I play CTF with SKSD
             Team, especially crypto challenges.<br></br>
           </p>
           <h3>Get in touch</h3>
@@ -40,7 +42,7 @@ class AboutPage extends React.Component {
               <a
                 target="_blank"
                 rel="noreferrer"
-                href="https://twitter.com/merricx_"
+                href="https://twitter.com/merrricx"
               >
                 Twitter
               </a>

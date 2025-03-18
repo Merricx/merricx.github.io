@@ -8,7 +8,7 @@ module.exports = {
     description: "My personal blog",
     siteUrl: "https://merri.cx",
     social: {
-      twitter: "@merricx_",
+      twitter: "@merrricx",
     },
   },
   pathPrefix: "/",
@@ -97,7 +97,7 @@ module.exports = {
             ...blogPostsPages[page.path],
           }));
         },
-        serialize: ({path, date}) => {
+        serialize: ({ path, date }) => {
           if (date) {
             return {
               url: path,

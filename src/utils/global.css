@@ -1,5 +1,5 @@
 body {
-  --pink: rgb(255, 167, 196);
+  /* --pink: rgb(255, 167, 196); */
   --blue: #0984e3;
   --light-blue: #74b9ff;
   background-color: var(--bg);
@@ -74,13 +74,13 @@ body:lang(he) blockquote {
 
 /* styles for Persian language */
 body:lang(fa) article,
-body:lang(fa) header > h1 {
+body:lang(fa) header>h1 {
   font-family: 'Vazir';
 }
 
 /* styles for Arabic language */
 body:lang(ar) article,
-body:lang(ar) header > h1 {
+body:lang(ar) header>h1 {
   font-family: 'Cairo', sans-serif;
 }
 
@@ -168,7 +168,7 @@ pre[class*='language-'] ::selection {
 }
 
 /* Inline code */
-:not(pre) > code[class*='language-'] {
+:not(pre)>code[class*='language-'] {
   border-radius: 0.3em;
   background: var(--inlineCode-bg);
   color: var(--inlineCode-text);
