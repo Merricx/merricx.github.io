@@ -20,12 +20,14 @@ class AboutPage extends React.Component {
             src={profilePic}
           />
           <p>
-            Hi, I am <b style={{ color: "var(--blue)" }}>Imam Al-Fath</b>,
-            a security researcher from Indonesia that passionate about cryptography
-            and security.
+            Hi, I'm <b style={{ color: "var(--blue)" }}>Imam Al-Fath</b>,
+            a security researcher that is currently working at <b>zkSecurity</b>.
+            <br></br>
+            I mainly interested about topics that is related to the applied cryptography
+            and other intersecting areas between cryptography and software security.
             <br></br>
             In my (rare) free times, I play CTF with SKSD
-            Team, especially crypto challenges.<br></br>
+            Team or other Indonesian CTF community teams, focusing on the crypto challenges.
           </p>
           <h3>Get in touch</h3>
           <ul style={{ marginLeft: "10px" }}>
